@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>換裝圖層對齊檢查</title>
+  <style>
+    *{box-sizing:border-box}body{margin:0;background:#101015;color:#f8f0f7;font-family:system-ui,-apple-system,'Segoe UI',sans-serif}.wrap{max-width:850px;margin:auto;padding:24px 18px 48px}a{color:#7ce5e4}h1{font-size:26px;margin:8px 0}p{color:#c3b8c6;line-height:1.7}.controls{display:flex;flex-wrap:wrap;align-items:center;gap:15px;padding:16px;background:#211b29;border:1px solid #704665;border-radius:16px;margin:20px 0}input[type=file]{max-width:100%;font-size:13px}label{font-size:13px}.preview{position:relative;width:min(100%,450px);aspect-ratio:1135/1386;margin:0 auto;overflow:hidden;border:1px solid #ee79bb;border-radius:16px;background-color:#202026;background-image:linear-gradient(45deg,#292932 25%,transparent 25%),linear-gradient(-45deg,#292932 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#292932 75%),linear-gradient(-45deg,transparent 75%,#292932 75%);background-size:20px 20px;background-position:0 0,0 10px,10px -10px,-10px 0}.preview img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}.preview #overlay{opacity:.72}.status{min-height:24px;color:#75dedb;font-size:13px}.note{font-size:12px}.preview:after{content:'';position:absolute;inset:0;border:1px solid #ffffff1a;pointer-events:none}
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <a href="./idol-hunter-layers.html">← 回到遊戲</a>
+    <h1>圖層對齊檢查</h1>
+    <p>選擇你製作的透明 PNG，疊在原角色參考圖上。每張素材都應是 <strong>1135 × 1386</strong> 像素，並保持相同坐標；此頁只在你的裝置上預覽，不會上傳檔案。</p>
+    <div class="controls">
+      <input id="file" type="file" accept="image/png" aria-label="選擇透明 PNG">
+      <label>圖層透明度 <input id="opacity" type="range" min="0" max="100" value="72"> <span id="percent">72%</span></label>
+      <label><input id="hideReference" type="checkbox"> 只看圖層</label>
+    </div>
+    <p id="status" class="status" role="status">尚未選擇檔案。</p>
+    <div class="preview"><img id="reference" src="idol-stage-original.png" alt="原角色參考圖"><img id="overlay" alt="上傳的圖層預覽"></div>
+    <p class="note">如果看到黑底、人物其他部位或錯位，這張圖還不能放進換裝遊戲。請參考 <a href="./layers/README-zh.md">檔名與圖層規格</a>。</p>
+  </main>
+  <script>
+    const fileInput=document.querySelector('#file');
+    const overlay=document.querySelector('#overlay');
+    const status=document.querySelector('#status');
+    let objectUrl;
+    fileInput.addEventListener('change',()=>{
+      const file=fileInput.files[0];
+      if(!file)return;
+      if(objectUrl)URL.revokeObjectURL(objectUrl);
+      objectUrl=URL.createObjectURL(file);
+      const image=new Image();
+      image.onload=()=>{
+        overlay.src=objectUrl;
+        const sizeOk=image.naturalWidth===1135&&image.naturalHeight===1386;
+        const canvas=document.createElement('canvas');
+        canvas.width=canvas.height=1;
+        const context=canvas.getContext('2d');
+        context.drawImage(image,0,0,1,1,0,0,1,1);
+        const alpha=context.getImageData(0,0,1,1).data[3];
+        status.textContent=`${file.name}・${image.naturalWidth} × ${image.naturalHeight}・${sizeOk?'尺寸正確':'尺寸不符'}；左上角 ${alpha===0?'透明':'非透明，請檢查底色'}`;
+      };
+      image.onerror=()=>{status.textContent='無法讀取圖片，請選擇 PNG 檔。';};
+      image.src=objectUrl;
+    });
+    document.querySelector('#opacity').addEventListener('input',event=>{
+      overlay.style.opacity=event.target.value/100;
+      document.querySelector('#percent').textContent=event.target.value+'%';
+    });
+    document.querySelector('#hideReference').addEventListener('change',event=>{
+      document.querySelector('#reference').style.visibility=event.target.checked?'hidden':'visible';
+    });
+  </script>
+</body>
+</html>

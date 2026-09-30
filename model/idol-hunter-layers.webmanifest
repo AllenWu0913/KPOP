@@ -1,0 +1,11 @@
+{
+  "name": "星夜獵魔衣櫥｜K-pop 換裝遊戲",
+  "short_name": "獵魔衣櫥",
+  "description": "自由搭配獵魔偶像的髮型、衣服、襪子、鞋子與飾品",
+  "start_url": "./idol-hunter-layers.html",
+  "display": "standalone",
+  "background_color": "#101015",
+  "theme_color": "#101015",
+  "orientation": "portrait",
+  "icons": [{"src":"icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}]
+}

@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#111016">
+  <title>獵魔偶像圖層檢查</title>
+  <style>
+    :root{font-family:system-ui,-apple-system,'Segoe UI',sans-serif;color:#f7eff8;background:#0e0d12}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 20% 0,#47203a,transparent 32%),#0e0d12}.shell{max-width:1100px;margin:auto;padding:20px}header{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-bottom:16px;border-bottom:1px solid #ffffff24}h1{font-size:22px;margin:0}header small{color:#f98cc7;letter-spacing:.14em;font-weight:800}a{color:#79e1e1}.layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(320px,.85fr);gap:20px;margin-top:20px}.stage,.controls{background:#17151d;border:1px solid #ffffff25;border-radius:20px;box-shadow:0 20px 50px #0008;overflow:hidden}.stage-title{padding:11px 17px;color:#f68cc9;font-weight:800;letter-spacing:.13em;font-size:11px;border-bottom:1px solid #ffffff1c}.canvas{position:relative;aspect-ratio:1135/1386;width:100%;background:radial-gradient(circle at center,#332332 0,#121115 66%)}.canvas img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;pointer-events:none}.canvas img[hidden]{display:none}.stage-note{padding:11px 16px;font-size:11px;color:#b9aebb}.controls{padding:22px}.controls h2{font-size:21px;margin:0 0 7px}.controls p{font-size:12px;color:#bdaebf;line-height:1.7;margin:0 0 18px}.fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.field{display:flex;flex-direction:column;gap:6px;font-size:12px;font-weight:800;color:#fba3d0}.field select{width:100%;border-radius:10px;border:1px solid #73526f;background:#292130;color:#fff;padding:10px;font:inherit;font-weight:600}.accessories{display:flex;flex-wrap:wrap;gap:9px;margin:20px 0}.accessories label{display:flex;align-items:center;gap:5px;background:#2c2130;border:1px solid #654362;border-radius:999px;padding:8px 11px;font-size:12px;cursor:pointer}.actions{display:flex;gap:9px}.actions button{flex:1;border:1px solid #fd88c5;border-radius:10px;padding:11px;background:#a92f7d;color:white;font-weight:800;cursor:pointer}.actions button+button{background:#2b2230;border-color:#65586b}.warning{border-left:3px solid #f589c2;padding:9px 12px;margin-top:19px;background:#3d2639;color:#eadce6;font-size:11px;line-height:1.6}@media(max-width:760px){.shell{padding:11px}.layout{grid-template-columns:1fr;max-width:560px;margin:13px auto}.controls{padding:18px}h1{font-size:18px}}
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header><div><small>TRANSPARENT LAYER TEST</small><h1>獵魔偶像 · 圖層檢查</h1></div><a href="../idol-hunter-layers.html">前往正式遊戲</a></header>
+    <main class="layout">
+      <section class="stage" aria-label="圖層預覽"><div class="stage-title">✦ 1135 × 1386 透明圖層合成</div><div class="canvas">
+        <img id="hairBack" src="hair-01-back.png" alt="">
+        <img src="base.png" alt="獵魔偶像底稿">
+        <img id="socks" src="socks-01.png" alt="">
+        <img id="shoes" src="shoes-01.png" alt="">
+        <img id="outfit" src="outfit-01.png" alt="">
+        <img id="necklace" src="necklace-01.png" alt="">
+        <img id="bracelet" src="bracelet-01.png" alt="">
+        <img id="hairFront" src="hair-01-front.png" alt="">
+        <img id="hairAccessory" src="hair-accessory-01.png" alt="">
+      </div><div class="stage-note">這裡與正式遊戲使用相同的根目錄 PNG，可檢查接縫與透明背景。</div></section>
+      <section class="controls"><h2>分開選，每件都能換</h2><p>這頁只用來檢查圖層；在正式遊戲還可儲存造型。</p>
+        <div class="fields">
+          <label class="field">髮型<select id="hair"><option value="01">紫夜長雙馬尾</option><option value="02">莓紫俏麗短髮</option></select></label>
+          <label class="field">衣服<select id="outfitChoice"><option value="01">桃紅星焰裝</option><option value="02">青藍月光裝</option></select></label>
+          <label class="field">襪子<select id="socksChoice"><option value="01">白紫星星襪</option><option value="02">深色星紋襪</option></select></label>
+          <label class="field">鞋子<select id="shoesChoice"><option value="01">桃紅厚底靴</option><option value="02">青藍厚底靴</option></select></label>
+        </div>
+        <div class="accessories"><label><input id="hairAccessoryChoice" type="checkbox" checked> 髮飾</label><label><input id="necklaceChoice" type="checkbox" checked> 項鍊</label><label><input id="braceletChoice" type="checkbox" checked> 手環</label></div>
+        <div class="actions"><button id="random" type="button">✧ 隨機搭配</button><button id="reset" type="button">↺ 恢復原樣</button></div>
+        <div class="warning">圖層已同尺寸對齊，但髮際或袖口可能仍有細小接縫。詳見 <a href="README-zh.md">圖層規格</a>。</div>
+      </section>
+    </main>
+  </div>
+  <script>
+    const $ = id => document.getElementById(id);
+    const inputs = ['hair','outfitChoice','socksChoice','shoesChoice','hairAccessoryChoice','necklaceChoice','braceletChoice'];
+    function render(){
+      $('hairBack').src=`hair-${$('hair').value}-back.png`;
+      $('hairFront').src=`hair-${$('hair').value}-front.png`;
+      $('outfit').src=`outfit-${$('outfitChoice').value}.png`;
+      $('socks').src=`socks-${$('socksChoice').value}.png`;
+      $('shoes').src=`shoes-${$('shoesChoice').value}.png`;
+      $('hairAccessory').hidden=!$('hairAccessoryChoice').checked;
+      $('necklace').hidden=!$('necklaceChoice').checked;
+      $('bracelet').hidden=!$('braceletChoice').checked;
+    }
+    for(const id of inputs)$(id).addEventListener('change',render);
+    $('random').addEventListener('click',()=>{for(const id of inputs){const input=$(id);if(input.type==='checkbox')input.checked=Math.random()>.5;else input.value=Math.random()>.5?'02':'01';}render();});
+    $('reset').addEventListener('click',()=>{for(const id of inputs){const input=$(id);if(input.type==='checkbox')input.checked=true;else input.value='01';}render();});
+    render();
+  </script>
+</body>
+</html>

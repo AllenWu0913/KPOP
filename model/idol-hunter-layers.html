@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#101015">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="星夜獵魔衣櫥">
+  <link rel="manifest" href="idol-hunter-layers.webmanifest">
+  <link rel="icon" href="icon.svg">
+  <link rel="preload" href="layers/base.png" as="image">
+  <link rel="stylesheet" href="stage-looks.css">
+  <link rel="stylesheet" href="stage-layered.css">
+  <title>星夜獵魔衣櫥｜K-pop 換裝遊戲</title>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand-mark" aria-hidden="true">✦</div>
+      <div class="brand-copy"><span class="brand-kicker">MOONLIGHT IDOL STUDIO</span><strong>星夜獵魔衣櫥</strong></div>
+      <button class="icon-button" id="randomLook" type="button" aria-label="隨機搭配造型">✧ <span>隨機搭配</span></button>
+    </header>
+
+    <main class="main-grid">
+      <section class="stage-panel" aria-label="獵魔偶像造型預覽">
+        <div class="stage-topline"><span class="live-dot"></span> ON STAGE <span class="stage-number">拖曳造型至角色</span></div>
+        <div class="stage" id="stageDrop">
+          <div class="stage-glow"></div>
+          <span class="stage-star star-one" aria-hidden="true">✦</span><span class="stage-star star-two" aria-hidden="true">✧</span><span class="stage-star star-three" aria-hidden="true">✦</span>
+          <div class="doll-layers" role="img" aria-label="可替換造型的獵魔偶像" id="doll">
+            <img id="hairBack" src="layers/hair-01-back.png" alt="" aria-hidden="true">
+            <img src="layers/base.png" alt="" aria-hidden="true" fetchpriority="high">
+            <img id="socksLayer" src="layers/socks-01.png" alt="" aria-hidden="true">
+            <img id="shoesLayer" src="layers/shoes-01.png" alt="" aria-hidden="true">
+            <img id="outfitLayer" src="layers/outfit-01.png" alt="" aria-hidden="true">
+            <img id="necklaceLayer" src="layers/necklace-01.png" alt="" aria-hidden="true">
+            <img id="braceletLayer" src="layers/bracelet-01.png" alt="" aria-hidden="true">
+            <img id="hairFront" src="layers/hair-01-front.png" alt="" aria-hidden="true">
+            <img id="hairAccessoryLayer" src="layers/hair-accessory-01.png" alt="" aria-hidden="true">
+          </div>
+          <div class="drop-hint" id="dropHint" aria-hidden="true">放開即可穿上 ✦</div>
+          <div class="stage-vignette"></div>
+          <div class="look-banner"><span class="banner-kicker">NOW WEARING</span><strong id="lookName">星焰偶像</strong><span id="lookSubtitle">把衣櫥造型拖到角色身上</span></div>
+        </div>
+        <div class="stage-footer"><span>✦ 拖曳或輕點卡片換裝 ✦</span><span id="saveStatus">尚未儲存</span></div>
+      </section>
+
+      <section class="closet-panel" aria-labelledby="closetTitle">
+        <div class="panel-head"><p class="eyebrow">DRESS UP · SHINE ON</p><h1 id="closetTitle">為偶像換上新造型</h1><p class="panel-intro">長按造型卡片，拖到左側角色身上即可替換；輕點卡片也能快速穿搭。髮型、衣服、襪子、鞋子與配飾都能分開選。</p></div>
+        <div class="category-title"><span>造型衣櫥</span><small>拖曳穿搭 · 自由混搭</small></div>
+        <div class="wardrobe-grid" id="wardrobeGrid" aria-label="可拖曳的造型選項"></div>
+        <div class="look-details" aria-live="polite"><span class="detail-label">LOOK DETAILS</span><div id="lookDetails" class="detail-chips"></div></div>
+        <div class="actions"><button id="saveLook" class="primary-button" type="button">儲存我的造型</button><button id="resetLook" class="secondary-button" type="button">恢復預設造型</button></div>
+        <p class="closet-note">選擇會即時套用；按「儲存我的造型」可在這台裝置保留搭配。</p>
+      </section>
+    </main>
+    <footer class="page-footer">DREAM A LOOK · OWN THE STAGE</footer>
+  </div>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="stage-layered.js" defer></script>
+</body>
+</html>
