@@ -47,15 +47,56 @@
 
       <section class="closet-panel" aria-labelledby="closetTitle">
         <div class="panel-head"><p class="eyebrow">DRESS UP · SHINE ON</p><h1 id="closetTitle">為偶像換上新造型</h1><p class="panel-intro">長按造型卡片，拖到左側角色身上即可替換；輕點卡片也能快速穿搭。髮型、衣服、襪子、鞋子與配飾都能分開選。</p></div>
+        <section class="quest-panel" aria-labelledby="questTitle">
+          <div class="quest-heading"><span class="detail-label">STYLE QUEST</span><button id="drawQuest" class="small-button" type="button">抽任務卡</button></div>
+          <h2 id="questTitle">月光演唱會</h2><p id="questDescription">為舞台搭配一套閃耀的月光造型。</p>
+          <div id="questGoals" class="quest-goals" aria-live="polite"></div>
+          <div class="quest-actions"><span id="questProgress">完成 0 / 3 個靈感</span><button id="performQuest" class="primary-button" type="button">上台表演</button></div>
+        </section>
+        <section class="creative-panel" aria-label="舞台布景和裝飾">
+          <div class="creative-row"><strong>舞台背景</strong><div class="choice-pills" id="sceneChoices" role="group" aria-label="選擇舞台背景">
+            <button type="button" data-scene="moon" aria-pressed="true">月光屋頂</button><button type="button" data-scene="dream" aria-pressed="false">星雲舞台</button><button type="button" data-scene="forest" aria-pressed="false">魔法森林</button>
+          </div></div>
+          <div class="creative-row"><strong>拍照貼紙</strong><div class="choice-pills sticker-pills" id="stickerChoices" role="group" aria-label="選擇拍照貼紙">
+          <div class="creative-row"><strong>舞台燈光</strong><div class="choice-pills" id="lightChoices" role="group" aria-label="選擇舞台燈光">
+            <button type="button" data-light="rose" aria-pressed="true">粉紅聚光</button><button type="button" data-light="cyan" aria-pressed="false">青藍光束</button><button type="button" data-light="starlight" aria-pressed="false">星光柔焦</button>
+          </div></div>
+            <button type="button" data-sticker="✦" aria-pressed="true" aria-label="星星貼紙">✦</button><button type="button" data-sticker="♫" aria-pressed="false" aria-label="音符貼紙">♫</button><button type="button" data-sticker="☾" aria-pressed="false" aria-label="月亮貼紙">☾</button><button type="button" data-sticker="" aria-pressed="false" aria-label="不加貼紙">無</button>
+          </div></div>
+        </section>
         <div class="category-title"><span>造型衣櫥</span><small>拖曳穿搭 · 自由混搭</small></div>
         <div class="wardrobe-grid" id="wardrobeGrid" aria-label="可拖曳的造型選項"></div>
         <div class="look-details" aria-live="polite"><span class="detail-label">LOOK DETAILS</span><div id="lookDetails" class="detail-chips"></div></div>
-        <div class="actions"><button id="saveLook" class="primary-button" type="button">儲存我的造型</button><button id="resetLook" class="secondary-button" type="button">恢復預設造型</button></div>
-        <p class="closet-note">選擇會即時套用；按「儲存我的造型」可在這台裝置保留搭配。</p>
+        <div class="actions"><button id="saveLook" class="primary-button" type="button">拍照收藏造型</button><button id="openAlbum" class="secondary-button" type="button">我的造型冊 <span id="albumCount">0</span></button></div>
+        <button id="resetLook" class="text-button" type="button">恢復預設造型</button>
+        <p class="closet-note">造型冊保存在這台裝置，最多收藏 24 套。</p>
       </section>
     </main>
     <footer class="page-footer">DREAM A LOOK · OWN THE STAGE</footer>
   </div>
+  <dialog id="performanceDialog" class="game-dialog">
+    <div class="dialog-shell">
+      <div class="dialog-heading"><div><span class="detail-label">ON STAGE</span><h2>星光節拍秀</h2></div><button class="dialog-x" type="button" data-close="performanceDialog" aria-label="關閉">×</button></div>
+      <div id="performanceScene" class="performance-scene" data-scene="moon"><span id="performanceSticker" class="photo-sticker">✦</span><div id="performanceAvatar" class="performance-avatar"></div></div>
+      <p id="performanceInstruction" class="game-instruction">星星亮起時，點一下大星星！跟不上也沒關係，繼續享受表演。</p>
+      <div class="beat-track" aria-hidden="true"><span id="beatBar"></span></div>
+      <div class="game-readout"><span id="beatClock">準備好了嗎？</span><span id="beatScore">點亮 0 顆星星</span></div>
+      <button id="beatButton" class="beat-button" type="button" disabled aria-label="跟著節拍點星星">✦</button>
+      <div id="performanceResult" class="performance-result" hidden><h3 id="resultTitle">演出完成！</h3><p id="resultMessage"></p><div class="result-actions"><button id="savePerformanceLook" class="primary-button" type="button">拍照收藏</button><button class="secondary-button" type="button" data-close="performanceDialog">回到衣櫥</button></div></div>
+      <button id="skipPerformance" class="text-button" type="button">跳過節拍，直接看演出</button>
+    </div>
+  </dialog>
+  <dialog id="saveDialog" class="game-dialog save-dialog">
+    <form id="saveLookForm" class="dialog-shell">
+      <div class="dialog-heading"><div><span class="detail-label">LOOKBOOK</span><h2>收藏這套造型</h2></div><button class="dialog-x" type="button" data-close="saveDialog" aria-label="關閉">×</button></div>
+      <div class="save-preview" id="savePreview" data-scene="moon"></div>
+      <label class="save-label" for="lookTitleInput">幫造型取個名字</label><input id="lookTitleInput" maxlength="24" placeholder="例如：月光閃耀舞台" required>
+      <div class="dialog-actions"><button class="primary-button" type="submit">收進造型冊</button><button class="secondary-button" type="button" data-close="saveDialog">再想一下</button></div>
+    </form>
+  </dialog>
+  <dialog id="albumDialog" class="game-dialog album-dialog">
+    <div class="dialog-shell"><div class="dialog-heading"><div><span class="detail-label">MY LOOKBOOK</span><h2>我的造型冊</h2></div><button class="dialog-x" type="button" data-close="albumDialog" aria-label="關閉">×</button></div><p id="albumEmpty" class="album-empty">完成第一套收藏，讓造型冊開始發光吧！</p><div id="albumGrid" class="album-grid"></div></div>
+  </dialog>
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
   <script src="stage-layered.js" defer></script>
 </body>

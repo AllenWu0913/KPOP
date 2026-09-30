@@ -339,3 +339,284 @@ if (saved && typeof saved === 'object') get('saveStatus').textContent = '已載�
 if ('serviceWorker' in navigator && location.protocol !== 'file:') {
   window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
 }
+const albumKey = 'idol-stage-lookbook-v1';
+const creativeKey = 'idol-stage-creative-v1';
+const questKey = 'idol-stage-quest-v1';
+const albumLimit = 24;
+const scenes = ['moon', 'dream', 'forest'];
+const stickerChoices = ['✦', '♫', '☾', ''];
+const lights = ['rose', 'cyan', 'starlight'];
+const questCards = [
+  { id: 'moonlight', title: '月光演唱會', description: '青藍月光裝配上月光飾品，準備閃亮登台。', goals: [
+    { label: '穿上青藍月光裝', test: c => c.outfitChoice === '02' },
+    { label: '戴月光髮夾或銀鏈', test: c => c.hairAccessoryChoice === '02' || c.necklaceChoice === '02' },
+    { label: '選青藍厚底靴或高跟鞋', test: c => c.shoesChoice === '02' || c.shoesChoice === '03' }
+  ] },
+  { id: 'star-flame', title: '星焰首場演出', description: '用桃紅星焰裝和星星配件點亮第一場舞台。', goals: [
+    { label: '穿上桃紅星焰裝', test: c => c.outfitChoice === '01' },
+    { label: '戴星星蝴蝶結或星焰手環', test: c => c.hairAccessoryChoice === '01' || c.braceletChoice === '01' },
+    { label: '穿上桃紅厚底靴', test: c => c.shoesChoice === '01' }
+  ] },
+  { id: 'night-patrol', title: '夜色巡演任務', description: '換上俏麗髮型，穿好高跟鞋與透膚襪出發。', goals: [
+    { label: '換成莓紫俏麗短髮', test: c => c.hairChoice === '02' },
+    { label: '搭配霓虹星芒高跟鞋', test: c => c.shoesChoice === '03' },
+    { label: '穿上高跟鞋專屬透膚襪', test: c => c.socksChoice === '03' }
+  ] },
+  { id: 'neon-remix', title: '霓虹混搭派對', description: '試試青藍衣裝和星石手環，再加一點自己的創意。', goals: [
+    { label: '穿上青藍月光裝', test: c => c.outfitChoice === '02' },
+    { label: '戴上青藍星石手環', test: c => c.braceletChoice === '02' },
+    { label: '選擇一款高跟鞋', test: c => c.shoesChoice === '03' }
+  ] },
+  { id: 'wish-upon-star', title: '星星許願舞台', description: '把星芒項鍊和你最喜歡的造型放在一起。', goals: [
+    { label: '戴上星芒項鍊', test: c => c.necklaceChoice === '01' },
+    { label: '使用長雙馬尾', test: c => c.hairChoice === '01' },
+    { label: '選月光屋頂或魔法森林', test: c => currentScene === 'moon' || currentScene === 'forest' }
+  ] },
+  { id: 'grand-finale', title: '最後安可舞台', description: '自由設計造型，挑背景和貼紙完成安可演出。', goals: [
+    { label: '搭配兩件或以上配飾', test: c => accessoryIds.filter(id => c[id] !== '00').length >= 2 },
+    { label: '選擇音符拍照貼紙', test: c => currentSticker === '♫' },
+    { label: '把舞台換成星雲背景', test: c => currentScene === 'dream' }
+  ] }
+];
+function readStored(key, fallback) {
+  try { const value = JSON.parse(localStorage.getItem(key) || 'null'); return value == null ? fallback : value; }
+  catch { return fallback; }
+}
+const savedCreative = readStored(creativeKey, {});
+const savedQuest = readStored(questKey, {});
+const storedAlbum = readStored(albumKey, []);
+let album = (Array.isArray(storedAlbum) ? storedAlbum : []).filter(item => item && typeof item === 'object' && item.choices).slice(0, albumLimit);
+let currentScene = scenes.includes(savedCreative.scene) ? savedCreative.scene : 'moon';
+let currentSticker = stickerChoices.includes(savedCreative.sticker) ? savedCreative.sticker : '✦';
+let currentLight = lights.includes(savedCreative.light) ? savedCreative.light : 'rose';
+let currentQuestId = questCards.some(card => card.id === savedQuest.current) ? savedQuest.current : 'moonlight';
+let completedQuests = new Set((Array.isArray(savedQuest.completed) ? savedQuest.completed : []).filter(id => questCards.some(card => card.id === id)));
+let performanceTimer = 0;
+let pulseTimer = 0;
+let beatIndex = 0;
+let beatHits = 0;
+let beatActive = false;
+
+function persistCreative() {
+  try { localStorage.setItem(creativeKey, JSON.stringify({ scene: currentScene, sticker: currentSticker, light: currentLight })); } catch {}
+}
+function persistQuest() {
+  try { localStorage.setItem(questKey, JSON.stringify({ current: currentQuestId, completed: Array.from(completedQuests) })); } catch {}
+}
+function setScene(scene) {
+  currentScene = scenes.includes(scene) ? scene : 'moon';
+  get('stageDrop').dataset.scene = currentScene;
+  get('performanceScene').dataset.scene = currentScene;
+  get('savePreview').dataset.scene = currentScene;
+  document.querySelectorAll('#sceneChoices button').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.scene === currentScene)));
+  persistCreative();
+}
+function setSticker(sticker) {
+  currentSticker = stickerChoices.includes(sticker) ? sticker : '';
+  get('performanceSticker').textContent = currentSticker;
+  const stageSticker = get('stageSticker');
+  if (stageSticker) { stageSticker.textContent = currentSticker; stageSticker.hidden = !currentSticker; }
+  document.querySelectorAll('#stickerChoices button').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.sticker === currentSticker)));
+  persistCreative();
+}
+function setLight(light) {
+  currentLight = lights.includes(light) ? light : 'rose';
+  for (const id of ['stageDrop', 'performanceScene', 'savePreview']) get(id).dataset.light = currentLight;
+  document.querySelectorAll('#lightChoices button').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.light === currentLight)));
+  persistCreative();
+}
+function createAvatar(container, look) {
+  container.replaceChildren();
+  const avatar = container.classList.contains('performance-avatar') ? container : document.createElement('div');
+  if (avatar !== container) { avatar.className = 'performance-avatar'; container.append(avatar); }
+  const hair = look.hairChoice || '01';
+  const layers = [
+    'layers/hair-' + hair + '-back.png',
+    'layers/base.png',
+    'layers/socks-' + (look.socksChoice || '01') + '.png',
+    'layers/shoes-' + (look.shoesChoice || '01') + '.png',
+    'layers/outfit-' + (look.outfitChoice || '01') + '.png',
+    look.necklaceChoice === '00' ? '' : 'layers/necklace-' + (look.necklaceChoice || '01') + '.png',
+    look.braceletChoice === '00' ? '' : 'layers/bracelet-' + (look.braceletChoice || '01') + '.png',
+    'layers/hair-' + hair + '-front.png',
+    look.hairAccessoryChoice === '00' ? '' : 'layers/hair-accessory-' + (look.hairAccessoryChoice || '01') + '.png'
+  ];
+  for (const src of layers) {
+    if (!src) continue;
+    const image = document.createElement('img');
+    image.src = src; image.alt = ''; image.setAttribute('aria-hidden', 'true'); image.draggable = false;
+    avatar.append(image);
+  }
+}
+function selectedQuest() { return questCards.find(card => card.id === currentQuestId) || questCards[0]; }
+function renderQuest() {
+  const quest = selectedQuest();
+  const picked = choices();
+  get('questTitle').textContent = quest.title;
+  get('questDescription').textContent = quest.description;
+  const goals = get('questGoals');
+  goals.replaceChildren();
+  let matches = 0;
+  for (const goal of quest.goals) {
+    const done = goal.test(picked);
+    if (done) matches++;
+    const row = document.createElement('div');
+    row.className = 'quest-goal' + (done ? ' done' : '');
+    const mark = document.createElement('span');
+    mark.className = 'quest-goal-mark'; mark.setAttribute('aria-hidden', 'true'); mark.textContent = done ? '✓' : '·';
+    const text = document.createElement('span'); text.textContent = goal.label;
+    row.append(mark, text); goals.append(row);
+  }
+  const alreadyDone = completedQuests.has(quest.id);
+  get('questProgress').textContent = '靈感 ' + matches + '/3 · 任務紀錄 ' + completedQuests.size + '/6' + (alreadyDone ? ' · 已完成過' : '');
+  return { quest, matches };
+}
+function chooseQuest() {
+  const others = questCards.filter(card => card.id !== currentQuestId);
+  currentQuestId = others[Math.floor(Math.random() * others.length)].id;
+  persistQuest(); renderQuest();
+}
+function syncStageSticker() {
+  let stageSticker = get('stageSticker');
+  if (!stageSticker) {
+    stageSticker = document.createElement('span');
+    stageSticker.id = 'stageSticker'; stageSticker.className = 'stage-selected-sticker'; stageSticker.setAttribute('aria-hidden', 'true');
+    get('stageDrop').insertBefore(stageSticker, document.querySelector('.stage-vignette'));
+  }
+  stageSticker.textContent = currentSticker; stageSticker.hidden = !currentSticker;
+}
+function refreshCreativeUI() {
+  get('stageDrop').dataset.scene = currentScene;
+  get('performanceScene').dataset.scene = currentScene;
+  get('savePreview').dataset.scene = currentScene;
+  get('performanceSticker').textContent = currentSticker;
+  for (const id of ['stageDrop', 'performanceScene', 'savePreview']) get(id).dataset.light = currentLight;
+  syncStageSticker();
+  document.querySelectorAll('#sceneChoices button').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.scene === currentScene)));
+  document.querySelectorAll('#stickerChoices button').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.sticker === currentSticker)));
+}
+  document.querySelectorAll('#lightChoices button').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.light === currentLight)));
+function updateAlbumCount() { get('albumCount').textContent = album.length + '/' + albumLimit; }
+function openSaveDialog() {
+  if (album.length >= albumLimit) { toast('造型冊已滿，先刪除一套收藏再加入新造型。'); return; }
+  createAvatar(get('savePreview'), choices());
+  get('savePreview').dataset.scene = currentScene;
+  get('lookTitleInput').value = '';
+  get('saveDialog').showModal();
+  get('lookTitleInput').focus();
+}
+function renderAlbum() {
+  const grid = get('albumGrid');
+  grid.replaceChildren();
+  get('albumEmpty').hidden = album.length > 0;
+  for (const look of album) {
+    const card = document.createElement('article'); card.className = 'album-card';
+    const preview = document.createElement('div'); preview.className = 'album-preview'; preview.dataset.scene = scenes.includes(look.scene) ? look.scene : 'moon'; preview.dataset.light = lights.includes(look.light) ? look.light : 'rose';
+    createAvatar(preview, look.choices);
+    const sticker = document.createElement('span'); sticker.className = 'photo-sticker'; sticker.textContent = stickerChoices.includes(look.sticker) ? look.sticker : ''; preview.append(sticker);
+    const copy = document.createElement('div'); copy.className = 'album-card-copy';
+    const title = document.createElement('strong'); title.textContent = look.name || '我的舞台造型';
+    const date = document.createElement('small'); date.textContent = look.created ? new Date(look.created).toLocaleDateString() : '收藏造型'; copy.append(title, date);
+    const actions = document.createElement('div'); actions.className = 'album-card-actions';
+    const wear = document.createElement('button'); wear.type = 'button'; wear.dataset.albumAction = 'wear'; wear.dataset.id = String(look.id); wear.textContent = '穿上這套';
+    const remove = document.createElement('button'); remove.type = 'button'; remove.dataset.albumAction = 'remove'; remove.dataset.id = String(look.id); remove.textContent = '刪除';
+    actions.append(wear, remove); card.append(preview, copy, actions); grid.append(card);
+  }
+  updateAlbumCount();
+}
+function persistAlbum() {
+  try { localStorage.setItem(albumKey, JSON.stringify(album)); return true; }
+  catch { toast('裝置儲存空間不足，請刪除幾套造型再試。'); return false; }
+}
+function saveLookToAlbum(event) {
+  event.preventDefault();
+  if (album.length >= albumLimit) { get('saveDialog').close(); toast('造型冊已滿，先刪除一套收藏再加入新造型。'); return; }
+  const name = get('lookTitleInput').value.trim().slice(0, 24) || '舞台造型 ' + (album.length + 1);
+  const before = album;
+  album = [{ id: String(Date.now()) + '-' + Math.random().toString(36).slice(2, 7), name, choices: choices(), scene: currentScene, sticker: currentSticker, light: currentLight, created: Date.now() }, ...album].slice(0, albumLimit);
+  if (!persistAlbum()) { album = before; return; }
+  try { localStorage.setItem(storageKey, JSON.stringify(choices())); } catch {}
+  get('saveDialog').close(); get('saveStatus').textContent = '造型冊已收藏 ' + album.length + '/' + albumLimit + ' 套';
+  renderAlbum(); toast('已收藏到造型冊！');
+}
+function startPerformance() {
+  const dialog = get('performanceDialog');
+  if (dialog.open) return;
+  createAvatar(get('performanceAvatar'), choices());
+  get('performanceScene').dataset.scene = currentScene; get('performanceScene').dataset.light = currentLight; get('performanceSticker').textContent = currentSticker;
+  beatIndex = 0; beatHits = 0; beatActive = false;
+  get('beatButton').disabled = true; get('beatButton').classList.remove('beat-ready'); get('beatBar').style.width = '0%';
+  get('beatClock').textContent = '準備開始！'; get('beatScore').textContent = '點亮 0 顆星星';
+  get('performanceResult').hidden = true; get('skipPerformance').hidden = false;
+  get('beatButton').hidden = false; get('performanceInstruction').hidden = false;
+  dialog.showModal(); performanceTimer = setTimeout(nextBeat, 500);
+}
+function nextBeat() {
+  if (beatIndex >= 16) { finishPerformance(false); return; }
+  beatIndex++; beatActive = true;
+  const button = get('beatButton'); button.disabled = false; button.classList.add('beat-ready');
+  get('beatClock').textContent = '第 ' + beatIndex + '/16 拍 · ' + Math.max(0, Math.ceil((16 - beatIndex) * 1.2)) + ' 秒';
+  get('beatBar').style.width = Math.round(beatIndex / 16 * 100) + '%';
+  pulseTimer = setTimeout(() => {
+    if (beatActive) { beatActive = false; button.disabled = true; button.classList.remove('beat-ready'); }
+  }, 700);
+  performanceTimer = setTimeout(nextBeat, 1200);
+}
+function tapBeat() {
+  if (!beatActive) return;
+  beatActive = false; beatHits++;
+  get('beatButton').disabled = true; get('beatButton').classList.remove('beat-ready');
+  get('beatScore').textContent = '點亮 ' + beatHits + ' 顆星星';
+  get('performanceScene').classList.add('stage-pop');
+  setTimeout(() => get('performanceScene').classList.remove('stage-pop'), 180);
+}
+function finishPerformance(skipped) {
+  clearTimeout(performanceTimer); clearTimeout(pulseTimer); beatActive = false;
+  get('beatButton').disabled = true; get('beatButton').classList.remove('beat-ready');
+  get('skipPerformance').hidden = true; get('beatButton').hidden = true; get('performanceInstruction').hidden = true;
+  get('beatBar').style.width = '100%';
+  const result = renderQuest();
+  if (result.matches >= 2) {
+    completedQuests.add(result.quest.id); persistQuest(); renderQuest();
+    get('resultTitle').textContent = '任務完成！';
+    get('resultMessage').textContent = '你完成了「' + result.quest.title + '」的造型靈感，還在表演中點亮 ' + beatHits + ' 顆星星！';
+  } else {
+    get('resultTitle').textContent = '演出完成！';
+    get('resultMessage').textContent = skipped
+      ? '「' + result.quest.title + '」的舞台已準備好，想換造型時可以再來玩。'
+      : '你在舞台上點亮了 ' + beatHits + ' 顆星星！也可以試試任務卡上的造型靈感。';
+  }
+  get('performanceResult').hidden = false;
+}
+function stopPerformance() {
+  clearTimeout(performanceTimer); clearTimeout(pulseTimer); beatActive = false;
+}
+function useAlbumLook(id, action) {
+  const item = album.find(look => String(look.id) === id);
+  if (!item) return;
+  if (action === 'remove') {
+    album = album.filter(look => String(look.id) !== id);
+    if (persistAlbum()) { renderAlbum(); toast('已從造型冊移除。'); }
+    return;
+  }
+  setChoices(item.choices); setScene(item.scene); setSticker(item.sticker); setLight(item.light);
+  get('albumDialog').close(); toast('已穿上收藏造型！');
+}
+
+const originalRender = render;
+render = function () { originalRender(); renderQuest(); refreshCreativeUI(); };
+get('drawQuest').addEventListener('click', chooseQuest);
+get('performQuest').addEventListener('click', startPerformance);
+get('beatButton').addEventListener('click', tapBeat);
+get('skipPerformance').addEventListener('click', () => finishPerformance(true));
+get('savePerformanceLook').addEventListener('click', openSaveDialog);
+get('saveLook').addEventListener('click', event => { event.stopImmediatePropagation(); openSaveDialog(); }, true);
+get('openAlbum').addEventListener('click', () => { renderAlbum(); get('albumDialog').showModal(); });
+get('sceneChoices').addEventListener('click', event => { const button = event.target.closest('[data-scene]'); if (button) setScene(button.dataset.scene); });
+get('stickerChoices').addEventListener('click', event => { const button = event.target.closest('[data-sticker]'); if (button) setSticker(button.dataset.sticker); });
+get('saveLookForm').addEventListener('submit', saveLookToAlbum);
+get('albumGrid').addEventListener('click', event => { const button = event.target.closest('[data-album-action]'); if (button) useAlbumLook(button.dataset.id, button.dataset.albumAction); });
+document.querySelectorAll('[data-close]').forEach(button => button.addEventListener('click', () => get(button.dataset.close).close()));
+get('performanceDialog').addEventListener('close', stopPerformance);
+get('lightChoices').addEventListener('click', event => { const button = event.target.closest('[data-light]'); if (button) setLight(button.dataset.light); });
+setScene(currentScene); setSticker(currentSticker); setLight(currentLight); renderQuest(); renderAlbum(); refreshCreativeUI();
