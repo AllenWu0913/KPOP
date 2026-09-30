@@ -1,9 +1,0 @@
-/* Only the face and head remain from the neutral reference; the outfit owns body proportions. */
-.doll-wrap .base {
-  clip-path: inset(0 0 62% 0);
-}
-.stage-ground {
-  bottom: 30%;
-  left: 35%;
-  width: 30%;
-}

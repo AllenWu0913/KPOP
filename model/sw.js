@@ -2,7 +2,7 @@ const CACHE = 'idol-stage-v8';
 const FILES = [
   './', './index.html', './idol-hunter-layers.html', './stage-looks.css',
   './stage-layered.css', './stage-layered.js', './idol-hunter-layers.webmanifest',
-  './manifest.webmanifest', './icon.svg',
+  './icon.svg',
   './layers/base.png',
   './layers/hair-01-back.png', './layers/hair-01-front.png',
   './layers/hair-02-back.png', './layers/hair-02-front.png',
