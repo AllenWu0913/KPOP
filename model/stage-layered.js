@@ -16,6 +16,7 @@ const accessoryFiles = {
   necklaceChoice: ['necklace', 'necklaceLayer'],
   braceletChoice: ['bracelet', 'braceletLayer']
 };
+const braceletFile = (bracelet, outfit) => `layers/bracelet-${bracelet}${outfit === '02' ? '-outfit-02' : ''}.png`;
 const storageKey = 'idol-stage-layered-look-v1';
 const baseOnlyKey = 'idol-stage-base-only-v1';
 const get = id => document.getElementById(id);
@@ -102,7 +103,9 @@ function render() {
     const [filePrefix, layerId] = accessoryFiles[id];
     const layer = get(layerId);
     layer.hidden = picked[id] === '00';
-    if (!layer.hidden) layer.src = `layers/${filePrefix}-${picked[id]}.png`;
+    if (!layer.hidden) layer.src = id === 'braceletChoice'
+      ? braceletFile(picked[id], picked.outfitChoice)
+      : `layers/${filePrefix}-${picked[id]}.png`;
   }
   get('lookName').textContent = picked.outfitChoice === '01' ? '星焰偶像' : '月光偶像';
   get('lookSubtitle').textContent = `${parts.hairChoice.names[picked.hairChoice]} · ${parts.outfitChoice.names[picked.outfitChoice]}`;
@@ -438,7 +441,7 @@ function createAvatar(container, look) {
     'layers/shoes-' + (look.shoesChoice || '01') + '.png',
     'layers/outfit-' + (look.outfitChoice || '01') + '.png',
     look.necklaceChoice === '00' ? '' : 'layers/necklace-' + (look.necklaceChoice || '01') + '.png',
-    look.braceletChoice === '00' ? '' : 'layers/bracelet-' + (look.braceletChoice || '01') + '.png',
+    look.braceletChoice === '00' ? '' : braceletFile(look.braceletChoice || '01', look.outfitChoice || '01'),
     'layers/hair-' + hair + '-front.png',
     look.hairAccessoryChoice === '00' ? '' : 'layers/hair-accessory-' + (look.hairAccessoryChoice || '01') + '.png'
   ];

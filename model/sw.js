@@ -1,4 +1,4 @@
-const CACHE = 'idol-stage-v17';
+const CACHE = 'idol-stage-v19';
 const FILES = [
   './', './index.html', './idol-hunter-layers.html', './stage-looks.css',
   './stage-layered.css', './stage-layered.js', './idol-hunter-layers.webmanifest',
@@ -11,7 +11,8 @@ const FILES = [
   './layers/shoes-01.png', './layers/shoes-02.png', './layers/shoes-03.png',
   './layers/hair-accessory-01.png', './layers/hair-accessory-02.png',
   './layers/necklace-01.png', './layers/necklace-02.png',
-  './layers/bracelet-01.png', './layers/bracelet-02.png'
+  './layers/bracelet-01.png', './layers/bracelet-02.png',
+  './layers/bracelet-01-outfit-02.png', './layers/bracelet-02-outfit-02.png'
 ];
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(FILES)).then(() => self.skipWaiting()));
