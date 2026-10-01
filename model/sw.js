@@ -1,4 +1,4 @@
-const CACHE = 'idol-stage-v13';
+const CACHE = 'idol-stage-v14';
 const FILES = [
   './', './index.html', './idol-hunter-layers.html', './stage-looks.css',
   './stage-layered.css', './stage-layered.js', './idol-hunter-layers.webmanifest',

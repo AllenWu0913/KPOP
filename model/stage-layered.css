@@ -69,3 +69,19 @@
   .stage-panel .stage-topline{height:38px}
   .stage-panel .stage-footer{padding:10px 16px}
 }
+@media (orientation:landscape) and (max-width:860px){
+  .app-shell{padding:6px 10px}
+  .topbar{height:48px;margin-bottom:8px}
+  .main-grid{grid-template-columns:minmax(0,.75fr) minmax(0,1.25fr);gap:10px;max-width:none;margin:0;align-items:start}
+  .stage-panel{position:-webkit-sticky;position:sticky;top:max(8px,env(safe-area-inset-top));align-self:start;z-index:5}
+  .stage{height:calc(100vh - 82px);height:calc(100dvh - 82px);min-height:0;max-height:none}
+  .stage-panel .stage-topline{height:30px;padding:0 10px;font-size:8px}
+  .stage-panel .stage-footer{min-height:30px;padding:6px 8px;font-size:8px}
+  .stage-panel .look-banner{bottom:7px;left:7px;right:7px;gap:5px;padding:6px 7px}
+  .stage-panel .look-banner strong{font-size:13px}
+  .stage-panel .look-banner span:last-child{font-size:7px}
+  .closet-panel{min-width:0;padding:12px}
+  .panel-head h1{font-size:22px}
+  .panel-intro{font-size:10px;line-height:1.5}
+  .quest-panel{margin-top:10px;padding:11px}
+}
