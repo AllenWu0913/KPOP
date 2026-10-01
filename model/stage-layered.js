@@ -17,6 +17,7 @@ const accessoryFiles = {
   braceletChoice: ['bracelet', 'braceletLayer']
 };
 const storageKey = 'idol-stage-layered-look-v1';
+const baseOnlyKey = 'idol-stage-base-only-v1';
 const get = id => document.getElementById(id);
 const defaults = {
   hairChoice: '01', outfitChoice: '01', socksChoice: '01', shoesChoice: '01',
@@ -620,3 +621,15 @@ document.querySelectorAll('[data-close]').forEach(button => button.addEventListe
 get('performanceDialog').addEventListener('close', stopPerformance);
 get('lightChoices').addEventListener('click', event => { const button = event.target.closest('[data-light]'); if (button) setLight(button.dataset.light); });
 setScene(currentScene); setSticker(currentSticker); setLight(currentLight); renderQuest(); renderAlbum(); refreshCreativeUI();
+const baseOnlyToggle = get('baseOnlyToggle');
+let baseOnly = false;
+try { baseOnly = localStorage.getItem(baseOnlyKey) === 'true'; } catch {}
+function setBaseOnly(enabled) {
+  baseOnly = Boolean(enabled);
+  get('stageDrop').classList.toggle('base-only', baseOnly);
+  baseOnlyToggle.setAttribute('aria-pressed', String(baseOnly));
+  baseOnlyToggle.textContent = baseOnly ? '顯示全身' : '只看底圖';
+  baseOnlyToggle.setAttribute('aria-label', baseOnly ? '顯示完整造型' : '只顯示 base 身體圖層');
+  try { localStorage.setItem(baseOnlyKey, String(baseOnly)); } catch {}
+}
+baseOnlyToggle.addEventListener('click', () => setBaseOnly(!baseOnly));

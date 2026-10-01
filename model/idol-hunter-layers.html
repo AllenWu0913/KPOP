@@ -23,13 +23,13 @@
 
     <main class="main-grid">
       <section class="stage-panel" aria-label="獵魔偶像造型預覽">
-        <div class="stage-topline"><span class="live-dot"></span> ON STAGE <span class="stage-number">拖曳造型至角色</span></div>
+        <div class="stage-topline"><span class="live-dot"></span> ON STAGE <span class="stage-number">拖曳造型至角色</span><button id="baseOnlyToggle" class="base-only-toggle" type="button" aria-pressed="false" aria-label="只顯示 base 身體圖層">只看底圖</button></div>
         <div class="stage" id="stageDrop">
           <div class="stage-glow"></div>
           <span class="stage-star star-one" aria-hidden="true">✦</span><span class="stage-star star-two" aria-hidden="true">✧</span><span class="stage-star star-three" aria-hidden="true">✦</span>
           <div class="doll-layers" role="img" aria-label="可替換造型的獵魔偶像" id="doll">
             <img id="hairBack" src="layers/hair-01-back.png" alt="" aria-hidden="true">
-            <img src="layers/base.png" alt="" aria-hidden="true" fetchpriority="high">
+            <img id="baseLayer" src="layers/base.png" alt="" aria-hidden="true" fetchpriority="high">
             <img id="socksLayer" src="layers/socks-01.png" alt="" aria-hidden="true">
             <img id="shoesLayer" src="layers/shoes-01.png" alt="" aria-hidden="true">
             <img id="outfitLayer" src="layers/outfit-01.png" alt="" aria-hidden="true">
