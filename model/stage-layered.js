@@ -1,22 +1,23 @@
 const parts = {
-  hairChoice: { label: '髮型', names: { '01': '紫夜長雙馬尾', '02': '莓紫俏麗短髮' } },
-  outfitChoice: { label: '衣服', names: { '01': '桃紅星焰裝', '02': '青藍月光裝' } },
-  socksChoice: { label: '襪子', names: { '01': '白紫星星襪', '02': '深色星紋襪', '03': '透膚星芒長襪' } },
-  shoesChoice: { label: '鞋子', names: { '01': '桃紅厚底靴', '02': '青藍厚底靴', '03': '霓虹星芒高跟鞋' } }
+  hairChoice: { label: '髮型', names: { '00': '暫不加髮型', '01': '紫夜長雙馬尾', '02': '莓紫俏麗短髮' } },
+  outfitChoice: { label: '衣服', names: { '00': '底圖內搭', '01': '桃紅星焰裝', '02': '青藍月光裝', '03': '星光學園制服' } },
+  socksChoice: { label: '襪子', names: { '00': '不穿襪子', '01': '白紫星星襪', '02': '深色星紋襪', '03': '透膚星芒長襪' } },
+  shoesChoice: { label: '鞋子', names: { '00': '赤腳', '01': '桃紅厚底靴', '02': '青藍厚底靴', '03': '霓虹星芒高跟鞋', '04': '學園蝴蝶結平底鞋', '05': '星星休閒球鞋' } }
 };
 const accessoryIds = ['hairAccessoryChoice', 'necklaceChoice', 'braceletChoice'];
 const accessoryLabels = { hairAccessoryChoice: '髮飾', necklaceChoice: '項鍊', braceletChoice: '手環' };
 const accessoryOptions = {
-  hairAccessoryChoice: { '01': '星星蝴蝶結', '02': '月光彎月髮夾', '00': '不戴髮飾' },
-  necklaceChoice: { '01': '星芒項鍊', '02': '月光銀鏈', '00': '不戴項鍊' },
-  braceletChoice: { '01': '星焰手環', '02': '青藍星石手環', '00': '不戴手環' }
+  hairAccessoryChoice: { '00': '不戴髮飾', '01': '星星蝴蝶結', '02': '月光彎月髮夾', '03': '單側星結髮夾', '04': '單側月牙髮夾' },
+  necklaceChoice: { '00': '不戴項鍊', '01': '星芒項鍊', '02': '月光銀鏈' },
+  braceletChoice: { '00': '不戴手環', '01': '星焰手環', '02': '青藍星石手環', '03': '金曜星環', '04': '紫羅蘭月環' }
 };
 const accessoryFiles = {
   hairAccessoryChoice: ['hair-accessory', 'hairAccessoryLayer'],
   necklaceChoice: ['necklace', 'necklaceLayer'],
   braceletChoice: ['bracelet', 'braceletLayer']
 };
-const braceletFile = (bracelet, outfit) => `layers/bracelet-${bracelet}${outfit === '02' ? '-outfit-02' : ''}.png`;
+const braceletFile = (bracelet, outfit) => `layers/bracelet-${bracelet}${outfit === '02' ? '-outfit-02' : outfit === '00' || outfit === '03' ? '-base' : ''}.png`;
+const hairAccessoryFile = (accessory, hair) => `layers/hair-accessory-${accessory}${hair === '02' && (accessory === '01' || accessory === '02') ? '-hair-02' : ''}.png`;
 const storageKey = 'idol-stage-layered-look-v1';
 const baseOnlyKey = 'idol-stage-base-only-v1';
 const get = id => document.getElementById(id);
@@ -24,42 +25,55 @@ const defaults = {
   hairChoice: '01', outfitChoice: '01', socksChoice: '01', shoesChoice: '01',
   hairAccessoryChoice: '01', necklaceChoice: '01', braceletChoice: '01'
 };
+const emptyChoices = { hairChoice: '00', outfitChoice: '00', socksChoice: '00', shoesChoice: '00', hairAccessoryChoice: '00', necklaceChoice: '00', braceletChoice: '00' };
 const bootSocks = ['01', '02'];
+const sockFits = (shoe, sock) => shoe === '00' || sock === '00' || (shoe === '03' ? sock === '03' : bootSocks.includes(sock));
 let currentChoices = { ...defaults };
 let lastBootSocksChoice = '01';
 const wardrobe = [
   { key: 'hairChoice', label: '髮型', options: [
+    { value: '00', name: '暫不加髮型', icon: '－' },
     { value: '01', name: '紫夜長雙馬尾', image: 'layers/hair-01-front.png' },
     { value: '02', name: '莓紫俏麗短髮', image: 'layers/hair-02-front.png' }
   ] },
   { key: 'outfitChoice', label: '衣服', options: [
+    { value: '00', name: '保留底圖內搭', icon: '－' },
+    { value: '03', name: '星光學園制服', image: 'layers/outfit-03.png' },
     { value: '01', name: '桃紅星焰裝', image: 'layers/outfit-01.png' },
     { value: '02', name: '青藍月光裝', image: 'layers/outfit-02.png' }
   ] },
-  { key: 'socksChoice', label: '襪子', note: '高跟鞋會自動搭配透膚襪', options: [
+  { key: 'socksChoice', label: '襪子', note: '高跟鞋搭透膚襪；其他鞋款搭白紫或深色襪', options: [
+    { value: '00', name: '不穿襪子', icon: '－' },
     { value: '01', name: '白紫星星襪', image: 'layers/socks-01.png' },
     { value: '02', name: '深色星紋襪', image: 'layers/socks-02.png' },
     { value: '03', name: '透膚星芒長襪', image: 'layers/socks-03.png' }
   ] },
   { key: 'shoesChoice', label: '鞋子', options: [
+    { value: '00', name: '不穿鞋子', icon: '－' },
+    { value: '04', name: '學園蝴蝶結平底鞋', image: 'layers/shoes-04.png' },
+    { value: '05', name: '星星休閒球鞋', image: 'layers/shoes-05.png' },
     { value: '01', name: '桃紅厚底靴', image: 'layers/shoes-01.png' },
     { value: '02', name: '青藍厚底靴', image: 'layers/shoes-02.png' },
     { value: '03', name: '霓虹星芒高跟鞋', image: 'layers/shoes-03.png' }
   ] },
   { key: 'hairAccessoryChoice', label: '髮飾', options: [
+    { value: '00', name: '不戴髮飾', icon: '－' },
     { value: '01', name: '星星蝴蝶結', image: 'layers/hair-accessory-01.png' },
     { value: '02', name: '月光彎月髮夾', image: 'layers/hair-accessory-02.png' },
-    { value: '00', name: '不戴髮飾', icon: '－' }
+    { value: '03', name: '單側星結髮夾', image: 'layers/hair-accessory-03.png' },
+    { value: '04', name: '單側月牙髮夾', image: 'layers/hair-accessory-04.png' }
   ] },
   { key: 'necklaceChoice', label: '項鍊', options: [
+    { value: '00', name: '不戴項鍊', icon: '－' },
     { value: '01', name: '星芒項鍊', image: 'layers/necklace-01.png' },
-    { value: '02', name: '月光銀鏈', image: 'layers/necklace-02.png' },
-    { value: '00', name: '不戴項鍊', icon: '－' }
+    { value: '02', name: '月光銀鏈', image: 'layers/necklace-02.png' }
   ] },
   { key: 'braceletChoice', label: '手環', options: [
+    { value: '00', name: '不戴手環', icon: '－' },
     { value: '01', name: '星焰手環', image: 'layers/bracelet-01.png' },
     { value: '02', name: '青藍星石手環', image: 'layers/bracelet-02.png' },
-    { value: '00', name: '不戴手環', icon: '－' }
+    { value: '03', name: '金曜星環', image: 'layers/bracelet-03.png' },
+    { value: '04', name: '紫羅蘭月環', image: 'layers/bracelet-04.png' }
   ] }
 ];
 let toastTimer;
@@ -80,35 +94,41 @@ function setChoices(next) {
     currentChoices[id] = Object.prototype.hasOwnProperty.call(part.names, next[id]) ? next[id] : defaults[id];
   }
   for (const id of accessoryIds) currentChoices[id] = normalizeAccessory(id, next[id]);
-  const savedBootSock = bootSocks.includes(next.bootSocksChoice) ? next.bootSocksChoice : null;
-  const chosenSock = next.socksChoice;
-  if (currentChoices.shoesChoice === '03') {
-    lastBootSocksChoice = savedBootSock || (bootSocks.includes(chosenSock) ? chosenSock : '01');
-    currentChoices.socksChoice = '03';
-  } else {
-    currentChoices.socksChoice = bootSocks.includes(chosenSock) ? chosenSock : (savedBootSock || '01');
-    lastBootSocksChoice = currentChoices.socksChoice;
+  if (currentChoices.hairChoice === '00') currentChoices.hairAccessoryChoice = '00';
+  if (bootSocks.includes(next.bootSocksChoice)) lastBootSocksChoice = next.bootSocksChoice;
+  if (bootSocks.includes(currentChoices.socksChoice)) lastBootSocksChoice = currentChoices.socksChoice;
+  if (!sockFits(currentChoices.shoesChoice, currentChoices.socksChoice)) {
+    currentChoices.socksChoice = currentChoices.shoesChoice === '03' ? '03' : lastBootSocksChoice;
   }
   render();
 }
 
+function showLayer(id, choice, src) {
+  const layer = get(id);
+  layer.hidden = choice === '00';
+  if (!layer.hidden) layer.src = src;
+}
+
 function render() {
   const picked = choices();
-  get('hairBack').src = `layers/hair-${picked.hairChoice}-back.png`;
-  get('hairFront').src = `layers/hair-${picked.hairChoice}-front.png`;
-  get('outfitLayer').src = `layers/outfit-${picked.outfitChoice}.png`;
-  get('socksLayer').src = `layers/socks-${picked.socksChoice}.png`;
-  get('shoesLayer').src = `layers/shoes-${picked.shoesChoice}.png`;
+  showLayer('hairBack', picked.hairChoice, `layers/hair-${picked.hairChoice}-back.png`);
+  showLayer('hairFront', picked.hairChoice, `layers/hair-${picked.hairChoice}-front.png`);
+  showLayer('outfitLayer', picked.outfitChoice, `layers/outfit-${picked.outfitChoice}.png`);
+  showLayer('socksLayer', picked.socksChoice, `layers/socks-${picked.socksChoice}.png`);
+  showLayer('shoesLayer', picked.shoesChoice, `layers/shoes-${picked.shoesChoice}.png`);
   for (const id of accessoryIds) {
     const [filePrefix, layerId] = accessoryFiles[id];
     const layer = get(layerId);
-    layer.hidden = picked[id] === '00';
+    layer.hidden = picked[id] === '00' || (id === 'hairAccessoryChoice' && picked.hairChoice === '00');
     if (!layer.hidden) layer.src = id === 'braceletChoice'
       ? braceletFile(picked[id], picked.outfitChoice)
-      : `layers/${filePrefix}-${picked[id]}.png`;
+      : id === 'hairAccessoryChoice' ? hairAccessoryFile(picked[id], picked.hairChoice)
+        : `layers/${filePrefix}-${picked[id]}.png`;
   }
-  get('lookName').textContent = picked.outfitChoice === '01' ? '星焰偶像' : '月光偶像';
-  get('lookSubtitle').textContent = `${parts.hairChoice.names[picked.hairChoice]} · ${parts.outfitChoice.names[picked.outfitChoice]}`;
+  const fromBase = Object.keys(emptyChoices).every(id => picked[id] === '00');
+  get('baseOnlyToggle').setAttribute('aria-pressed', String(fromBase));
+  get('lookName').textContent = picked.outfitChoice === '00' ? '從底圖開始' : picked.outfitChoice === '03' ? '學園偶像' : picked.outfitChoice === '01' ? '星焰偶像' : '月光偶像';
+  get('lookSubtitle').textContent = fromBase ? '點選或拖曳下方卡片，逐件完成造型' : `${parts.hairChoice.names[picked.hairChoice]} · ${parts.outfitChoice.names[picked.outfitChoice]}`;
   const chosenAccessories = accessoryIds.filter(id => picked[id] !== '00').map(id => accessoryLabels[id]);
   get('doll').setAttribute('aria-label', `獵魔偶像：${Object.entries(parts).map(([id, part]) => part.names[picked[id]]).join('、')}；${chosenAccessories.join('、') || '不戴飾品'}`);
   const details = get('lookDetails');
@@ -127,22 +147,22 @@ function render() {
     const key = card.dataset.key;
     const value = card.dataset.value;
     const selected = value === picked[key];
-    const incompatibleSock = key === 'socksChoice' && (picked.shoesChoice === '03' ? value !== '03' : value === '03');
-    card.disabled = incompatibleSock;
+    const incompatibleSock = key === 'socksChoice' && !sockFits(picked.shoesChoice, value);
+    const missingHair = key === 'hairAccessoryChoice' && picked.hairChoice === '00' && value !== '00';
+    card.disabled = incompatibleSock || missingHair;
     card.setAttribute('aria-pressed', String(selected));
-    card.setAttribute('aria-label', incompatibleSock
-      ? `${card.querySelector('strong').textContent}目前不適用；${picked.shoesChoice === '03' ? '高跟鞋搭配透膚襪' : '透膚襪需搭配高跟鞋'}`
-      : `${card.querySelector('strong').textContent}，可拖曳到角色身上`);
+    const name = card.querySelector('strong').textContent;
+    card.setAttribute('aria-label', card.disabled ? `${name}目前不適用；${missingHair ? '請先選髮型' : '請選適合這雙鞋的襪子'}` : `${name}，可拖曳到角色身上`);
     const hint = card.querySelector('small');
-    hint.textContent = incompatibleSock
-      ? (picked.shoesChoice === '03' ? '高跟鞋請搭透膚襪' : '搭配高跟鞋使用')
-      : '拖曳或輕點';
+    hint.textContent = missingHair ? '請先選髮型' : incompatibleSock ? '與目前鞋款不搭' : '拖曳或輕點';
   });
   const sockNote = document.querySelector('[data-key="socksChoice"] .category-note');
   if (sockNote) sockNote.textContent = picked.shoesChoice === '03'
-    ? '已配合高跟鞋自動換成透膚襪'
-    : '透膚襪只搭配高跟鞋；換回靴子會恢復原襪款';
-  get('saveStatus').textContent = '尚未儲存目前造型';
+    ? '高跟鞋搭透膚襪，也可以選擇不穿襪子'
+    : picked.shoesChoice === '00' ? '先選襪子也可以；選鞋時會自動調整不相容的襪款'
+      : '厚底靴、平底鞋與球鞋搭白紫或深色襪';
+  try { localStorage.setItem(storageKey, JSON.stringify(picked)); } catch {}
+  get('saveStatus').textContent = '目前造型已保留在此裝置';
 }
 
 function buildWardrobe() {
@@ -201,20 +221,20 @@ function buildWardrobe() {
 
 function applyOption(key, value) {
   if (key === 'shoesChoice') {
-    if (value === '03') {
-      if (currentChoices.shoesChoice !== '03' && bootSocks.includes(currentChoices.socksChoice)) {
-        lastBootSocksChoice = currentChoices.socksChoice;
-      }
-      currentChoices.shoesChoice = '03';
-      currentChoices.socksChoice = '03';
-    } else {
-      currentChoices.shoesChoice = value;
-      if (currentChoices.socksChoice === '03') currentChoices.socksChoice = lastBootSocksChoice;
+    if (bootSocks.includes(currentChoices.socksChoice)) lastBootSocksChoice = currentChoices.socksChoice;
+    currentChoices.shoesChoice = value;
+    if (!sockFits(value, currentChoices.socksChoice)) {
+      currentChoices.socksChoice = value === '03' ? '03' : lastBootSocksChoice;
     }
   } else if (key === 'socksChoice') {
-    if ((currentChoices.shoesChoice === '03' && value !== '03') || (currentChoices.shoesChoice !== '03' && value === '03')) return false;
+    if (!sockFits(currentChoices.shoesChoice, value)) return false;
     currentChoices.socksChoice = value;
     if (bootSocks.includes(value)) lastBootSocksChoice = value;
+  } else if (key === 'hairChoice') {
+    currentChoices.hairChoice = value;
+    if (value === '00') currentChoices.hairAccessoryChoice = '00';
+  } else if (key === 'hairAccessoryChoice' && currentChoices.hairChoice === '00' && value !== '00') {
+    return false;
   } else {
     currentChoices[key] = value;
   }
@@ -305,19 +325,19 @@ window.addEventListener('pointercancel', event => {
   if (dragState?.pointerId === event.pointerId) finishDrag(event, true);
 });
 get('randomLook').addEventListener('click', () => {
-  const shoesChoice = ['01', '02', '03'][Math.floor(Math.random() * 3)];
+  const shoeOptions = ['01', '02', '03', '04', '05'];
+  const shoesChoice = shoeOptions[Math.floor(Math.random() * shoeOptions.length)];
   const bootSocksChoice = bootSocks[Math.floor(Math.random() * bootSocks.length)];
-  const random = {
+  setChoices({
     hairChoice: Math.random() < .5 ? '01' : '02',
-    outfitChoice: Math.random() < .5 ? '01' : '02',
+    outfitChoice: ['01', '02', '03'][Math.floor(Math.random() * 3)],
     shoesChoice,
     socksChoice: shoesChoice === '03' ? '03' : bootSocksChoice,
     bootSocksChoice,
-    hairAccessoryChoice: ['01', '02', '00'][Math.floor(Math.random() * 3)],
+    hairAccessoryChoice: ['01', '02', '03', '04', '00'][Math.floor(Math.random() * 5)],
     necklaceChoice: ['01', '02', '00'][Math.floor(Math.random() * 3)],
-    braceletChoice: ['01', '02', '00'][Math.floor(Math.random() * 3)]
-  };
-  setChoices(random);
+    braceletChoice: ['01', '02', '03', '04', '00'][Math.floor(Math.random() * 5)]
+  });
   toast('新造型登場！');
 });
 get('resetLook').addEventListener('click', () => {
@@ -375,6 +395,11 @@ const questCards = [
     { label: '戴上星芒項鍊', test: c => c.necklaceChoice === '01' },
     { label: '使用長雙馬尾', test: c => c.hairChoice === '01' },
     { label: '選月光屋頂或魔法森林', test: c => currentScene === 'moon' || currentScene === 'forest' }
+  ] },
+  { id: 'academy', title: '學園星光日', description: '替偶像穿上制服，戴上髮夾，挑一雙適合上學的鞋子。', goals: [
+    { label: '穿上星光學園制服', test: c => c.outfitChoice === '03' },
+    { label: '戴單側星結或月牙髮夾', test: c => c.hairAccessoryChoice === '03' || c.hairAccessoryChoice === '04' },
+    { label: '穿平底鞋或星星球鞋', test: c => c.shoesChoice === '04' || c.shoesChoice === '05' }
   ] },
   { id: 'grand-finale', title: '最後安可舞台', description: '自由設計造型，挑背景和貼紙完成安可演出。', goals: [
     { label: '搭配兩件或以上配飾', test: c => accessoryIds.filter(id => c[id] !== '00').length >= 2 },
@@ -434,16 +459,19 @@ function createAvatar(container, look) {
   const avatar = container.classList.contains('performance-avatar') ? container : document.createElement('div');
   if (avatar !== container) { avatar.className = 'performance-avatar'; container.append(avatar); }
   const hair = look.hairChoice || '01';
+  const outfit = look.outfitChoice || '01';
+  const socks = look.socksChoice || '01';
+  const shoes = look.shoesChoice || '01';
   const layers = [
-    'layers/hair-' + hair + '-back.png',
+    hair === '00' ? '' : `layers/hair-${hair}-back.png`,
     'layers/base.png',
-    'layers/socks-' + (look.socksChoice || '01') + '.png',
-    'layers/shoes-' + (look.shoesChoice || '01') + '.png',
-    'layers/outfit-' + (look.outfitChoice || '01') + '.png',
+    socks === '00' ? '' : `layers/socks-${socks}.png`,
+    shoes === '00' ? '' : `layers/shoes-${shoes}.png`,
+    outfit === '00' ? '' : `layers/outfit-${outfit}.png`,
     look.necklaceChoice === '00' ? '' : 'layers/necklace-' + (look.necklaceChoice || '01') + '.png',
-    look.braceletChoice === '00' ? '' : braceletFile(look.braceletChoice || '01', look.outfitChoice || '01'),
-    'layers/hair-' + hair + '-front.png',
-    look.hairAccessoryChoice === '00' ? '' : 'layers/hair-accessory-' + (look.hairAccessoryChoice || '01') + '.png'
+    look.braceletChoice === '00' ? '' : braceletFile(look.braceletChoice || '01', outfit),
+    hair === '00' ? '' : `layers/hair-${hair}-front.png`,
+    hair === '00' || look.hairAccessoryChoice === '00' ? '' : hairAccessoryFile(look.hairAccessoryChoice || '01', hair)
   ];
   for (const src of layers) {
     if (!src) continue;
@@ -472,7 +500,7 @@ function renderQuest() {
     row.append(mark, text); goals.append(row);
   }
   const alreadyDone = completedQuests.has(quest.id);
-  get('questProgress').textContent = '靈感 ' + matches + '/3 · 任務紀錄 ' + completedQuests.size + '/6' + (alreadyDone ? ' · 已完成過' : '');
+  get('questProgress').textContent = '靈感 ' + matches + '/3 · 已完成 ' + completedQuests.size + '/' + questCards.length + (alreadyDone ? ' ✓ 已完成這張' : '');
   return { quest, matches };
 }
 function chooseQuest() {
@@ -625,14 +653,13 @@ get('performanceDialog').addEventListener('close', stopPerformance);
 get('lightChoices').addEventListener('click', event => { const button = event.target.closest('[data-light]'); if (button) setLight(button.dataset.light); });
 setScene(currentScene); setSticker(currentSticker); setLight(currentLight); renderQuest(); renderAlbum(); refreshCreativeUI();
 const baseOnlyToggle = get('baseOnlyToggle');
-let baseOnly = false;
-try { baseOnly = localStorage.getItem(baseOnlyKey) === 'true'; } catch {}
-function setBaseOnly(enabled) {
-  baseOnly = Boolean(enabled);
-  get('stageDrop').classList.toggle('base-only', baseOnly);
-  baseOnlyToggle.setAttribute('aria-pressed', String(baseOnly));
-  baseOnlyToggle.textContent = baseOnly ? '顯示全身' : '只看底圖';
-  baseOnlyToggle.setAttribute('aria-label', baseOnly ? '顯示完整造型' : '只顯示 base 身體圖層');
-  try { localStorage.setItem(baseOnlyKey, String(baseOnly)); } catch {}
-}
-baseOnlyToggle.addEventListener('click', () => setBaseOnly(!baseOnly));
+try {
+  if (localStorage.getItem(baseOnlyKey) === 'true') {
+    setChoices(emptyChoices);
+    localStorage.removeItem(baseOnlyKey);
+  }
+} catch {}
+baseOnlyToggle.addEventListener('click', () => {
+  setChoices(emptyChoices);
+  toast('已回到底圖，現在可以一件一件加入造型！');
+});

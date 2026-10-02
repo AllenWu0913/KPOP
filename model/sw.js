@@ -1,4 +1,4 @@
-const CACHE = 'idol-stage-v19';
+const CACHE = 'idol-stage-v20';
 const FILES = [
   './', './index.html', './idol-hunter-layers.html', './stage-looks.css',
   './stage-layered.css', './stage-layered.js', './idol-hunter-layers.webmanifest',
@@ -6,13 +6,17 @@ const FILES = [
   './layers/base.png',
   './layers/hair-01-back.png', './layers/hair-01-front.png',
   './layers/hair-02-back.png', './layers/hair-02-front.png',
-  './layers/outfit-01.png', './layers/outfit-02.png',
+  './layers/outfit-01.png', './layers/outfit-02.png', './layers/outfit-03.png',
   './layers/socks-01.png', './layers/socks-02.png', './layers/socks-03.png',
-  './layers/shoes-01.png', './layers/shoes-02.png', './layers/shoes-03.png',
+  './layers/shoes-01.png', './layers/shoes-02.png', './layers/shoes-03.png', './layers/shoes-04.png', './layers/shoes-05.png',
   './layers/hair-accessory-01.png', './layers/hair-accessory-02.png',
+  './layers/hair-accessory-03.png', './layers/hair-accessory-04.png', './layers/hair-accessory-01-hair-02.png', './layers/hair-accessory-02-hair-02.png',
   './layers/necklace-01.png', './layers/necklace-02.png',
   './layers/bracelet-01.png', './layers/bracelet-02.png',
-  './layers/bracelet-01-outfit-02.png', './layers/bracelet-02-outfit-02.png'
+  './layers/bracelet-01-outfit-02.png', './layers/bracelet-02-outfit-02.png',
+  './layers/bracelet-01-base.png', './layers/bracelet-02-base.png',
+  './layers/bracelet-03.png', './layers/bracelet-03-base.png', './layers/bracelet-03-outfit-02.png',
+  './layers/bracelet-04.png', './layers/bracelet-04-base.png', './layers/bracelet-04-outfit-02.png'
 ];
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(FILES)).then(() => self.skipWaiting()));

@@ -87,5 +87,3 @@
 }
 .base-only-toggle{flex:none;padding:5px 8px;border:1px solid #ffffff38;border-radius:999px;background:#211d27;color:#e9dce9;font-size:9px;font-weight:800;white-space:nowrap}
 .base-only-toggle[aria-pressed="true"]{border-color:#6de4dd;background:#20393d;color:#e6fffd}
-.stage.base-only .doll-layers img:not(#baseLayer){display:none}
-.stage.base-only .stage-star,.stage.base-only .stage-selected-sticker{display:none}
