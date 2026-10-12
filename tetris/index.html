@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#111522">
+  <title>方塊派對｜俄羅斯方塊</title>
+  <style>
+    :root{color-scheme:dark;--bg:#111522;--panel:#1b2233;--line:#343e56;--text:#f7f8ff;--muted:#aab3c9;--cyan:#70e1e8;--pink:#fa75bf;--yellow:#ffd66e}
+    *{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 50% 0,#28314d 0,var(--bg) 56%);color:var(--text);font-family:ui-rounded,"Segoe UI",system-ui,sans-serif;display:grid;place-items:center;padding:20px}
+    .app{width:min(920px,100%)}header{text-align:center;margin:0 0 18px}h1{margin:0;font-size:clamp(26px,5vw,42px);letter-spacing:.06em}header p{margin:6px 0 0;color:var(--muted);font-size:14px}
+    .layout{display:grid;grid-template-columns:minmax(240px,320px) minmax(220px,280px);justify-content:center;align-items:start;gap:18px}.board-wrap{position:relative;padding:10px;border:1px solid #56627c;border-radius:18px;background:#0b0e17;box-shadow:0 18px 60px #0008}.board{display:block;width:100%;height:auto;border-radius:9px;background:#111726;touch-action:none}
+    .overlay{position:absolute;inset:10px;display:grid;place-content:center;text-align:center;padding:20px;border-radius:9px;background:#101522d9;backdrop-filter:blur(4px)}.overlay[hidden]{display:none}.overlay h2{font-size:26px;margin:0 0 7px}.overlay p{color:var(--muted);margin:0 0 18px;line-height:1.5}
+    button{font:inherit;color:var(--text);border:1px solid #65718c;background:#29334a;border-radius:12px;min-height:44px;padding:9px 14px;font-weight:750;cursor:pointer;touch-action:manipulation;user-select:none}button:hover{border-color:var(--cyan);background:#35445f}button:active{transform:translateY(1px)}button:focus-visible{outline:3px solid var(--yellow);outline-offset:2px}.primary{background:linear-gradient(120deg,#227f91,#5b65ba);border-color:#82e8ee}
+    .side{display:grid;gap:12px}.card{padding:14px;border:1px solid var(--line);border-radius:16px;background:linear-gradient(150deg,#20283b,#171d2b)}.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}.stat span{display:block;color:var(--muted);font-size:12px}.stat strong{display:block;margin-top:3px;font-size:24px;font-variant-numeric:tabular-nums}.mini-title{margin:0 0 9px;color:var(--muted);font-size:12px;letter-spacing:.08em}.next{display:block;width:100%;height:100px}.actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}.actions button:last-child{grid-column:1/-1}.help{color:var(--muted);font-size:13px;line-height:1.75}.help b{color:var(--text)}
+    .touch{display:grid;grid-template-columns:repeat(5,1fr);gap:7px}.touch button{padding:8px 2px;min-height:48px;font-size:19px}.touch .drop{color:#171522;background:var(--yellow);border-color:#ffe79d}.touch .rotate{color:#111522;background:var(--cyan);border-color:#a1f3f5}.touch-caption{text-align:center;color:var(--muted);font-size:11px;margin:7px 0 0}
+    @media(max-width:620px){body{padding:12px}.app{max-width:410px}header{margin-bottom:12px}.layout{grid-template-columns:minmax(210px,300px) minmax(96px,1fr);gap:9px;align-items:start}.board-wrap{padding:6px;border-radius:13px}.overlay{inset:6px}.side{gap:8px}.card{padding:9px;border-radius:12px}.stats{grid-template-columns:1fr;gap:4px}.stat strong{font-size:19px}.next{height:75px}.actions{gap:5px}.actions button{font-size:12px;padding:6px 4px;min-height:38px}.help{font-size:11px}.touch{grid-column:1/-1;gap:6px}.touch button{min-height:48px}.touch-caption{display:none}}
+    @media(max-width:360px){.layout{grid-template-columns:minmax(190px,1fr) 92px;gap:7px}.card{padding:7px}.mini-title{font-size:10px}.stat strong{font-size:17px}}
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header><h1>方塊派對</h1><p>排滿一整行，讓方塊消失！</p></header>
+    <div class="layout">
+      <section class="board-wrap" aria-label="俄羅斯方塊遊戲區">
+        <canvas id="board" class="board" width="300" height="600" aria-label="10 欄 20 列遊戲棋盤"></canvas>
+        <div id="overlay" class="overlay"><h2 id="overlayTitle">準備好了嗎？</h2><p id="overlayText">使用方向鍵移動，↑ 旋轉，空白鍵快速落下。</p><button id="startButton" class="primary" type="button">開始遊戲</button></div>
+      </section>
+      <aside class="side">
+        <div class="card stats"><div class="stat"><span>分數</span><strong id="score">0</strong></div><div class="stat"><span>最高分</span><strong id="best">0</strong></div><div class="stat"><span>消除行數</span><strong id="lines">0</strong></div><div class="stat"><span>等級</span><strong id="level">1</strong></div></div>
+        <div class="card"><p class="mini-title">下一個方塊</p><canvas id="next" class="next" width="140" height="100" aria-label="下一個方塊預覽"></canvas></div>
+        <div class="card actions"><button id="pauseButton" type="button">暫停</button><button id="restartButton" type="button">重新開始</button><button id="soundButton" type="button" aria-pressed="false">音效：關</button></div>
+        <div class="card help"><b>鍵盤</b> ← → 移動、↑ 旋轉、↓ 加速、空白鍵直落、P 暫停。<br><b>手機</b> 使用下方按鈕操作。</div>
+      </aside>
+      <section class="touch" aria-label="觸控操作">
+        <button data-action="left" aria-label="向左移動">←</button><button data-action="down" aria-label="加速下落">↓</button><button class="rotate" data-action="rotate" aria-label="旋轉">↻</button><button data-action="right" aria-label="向右移動">→</button><button class="drop" data-action="drop" aria-label="直接落下">⤓</button>
+      </section>
+    </div>
+  </main>
+  <script>
+  (()=>{
+    'use strict';
+    const COLS=10,ROWS=20,SIZE=30;
+    const COLORS={I:'#55dbe5',O:'#ffd66e',T:'#bd8bff',S:'#7ee5a5',Z:'#ff7893',J:'#70a9ff',L:'#ffa766'};
+    const SHAPES={
+      I:[[0,0,0,0],[1,1,1,1],[0,0,0,0],[0,0,0,0]],
+      O:[[1,1],[1,1]],
+      T:[[0,1,0],[1,1,1],[0,0,0]],
+      S:[[0,1,1],[1,1,0],[0,0,0]],
+      Z:[[1,1,0],[0,1,1],[0,0,0]],
+      J:[[1,0,0],[1,1,1],[0,0,0]],
+      L:[[0,0,1],[1,1,1],[0,0,0]]
+    };
+    const boardEl=document.getElementById('board'),ctx=boardEl.getContext('2d');
+    const nextEl=document.getElementById('next'),nctx=nextEl.getContext('2d');
+    const $=id=>document.getElementById(id);
+    let grid=Array.from({length:ROWS},()=>Array(COLS).fill('')),active=null,nextType=newType(),score=0,lines=0,level=1,dropTimer=0,lastTime=0,state='ready',best=0,sound=false,audio;
+    try{best=Number(localStorage.getItem('tetris-best')||0)}catch{} $('best').textContent=best;
+    function newType(){const keys=Object.keys(SHAPES);return keys[Math.floor(Math.random()*keys.length)]}
+    function newPiece(type){const matrix=SHAPES[type].map(row=>row.slice());return{type,matrix,x:Math.floor((COLS-matrix[0].length)/2),y:-1}}
+    function setOverlay(title,text,button,show=true){$('overlayTitle').textContent=title;$('overlayText').textContent=text;$('startButton').textContent=button;$('overlay').hidden=!show}
+    function updateStats(){$('score').textContent=score.toLocaleString();$('lines').textContent=lines;$('level').textContent=level;$('best').textContent=best}
+    function begin(){grid=Array.from({length:ROWS},()=>Array(COLS).fill(''));score=0;lines=0;level=1;dropTimer=0;nextType=newType();active=newPiece(newType());state='playing';setOverlay('','', '',false);updateStats();drawNext();lastTime=performance.now()}
+    function drawCell(c,x,y,size=SIZE,context=ctx){if(y<0)return;context.fillStyle=c;context.fillRect(x*size+1,y*size+1,size-2,size-2);context.fillStyle='#ffffff25';context.fillRect(x*size+3,y*size+3,size-6,3);context.fillStyle='#00000022';context.fillRect(x*size+3,y*size+size-5,size-6,2)}
+    function draw(){ctx.clearRect(0,0,boardEl.width,boardEl.height);ctx.fillStyle='#111726';ctx.fillRect(0,0,boardEl.width,boardEl.height);ctx.strokeStyle='#ffffff0a';ctx.lineWidth=1;for(let x=1;x<COLS;x++){ctx.beginPath();ctx.moveTo(x*SIZE+.5,0);ctx.lineTo(x*SIZE+.5,ROWS*SIZE);ctx.stroke()}for(let y=1;y<ROWS;y++){ctx.beginPath();ctx.moveTo(0,y*SIZE+.5);ctx.lineTo(COLS*SIZE,y*SIZE+.5);ctx.stroke()}
+      for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++)if(grid[y][x])drawCell(COLORS[grid[y][x]],x,y);
+      if(active){const ghost={...active,y:active.y};while(valid({...ghost,y:ghost.y+1}))ghost.y++;active.matrix.forEach((row,dy)=>row.forEach((v,dx)=>{if(v&&ghost.y+dy>=0){ctx.globalAlpha=.18;drawCell(COLORS[active.type],ghost.x+dx,ghost.y+dy);ctx.globalAlpha=1}}));active.matrix.forEach((row,dy)=>row.forEach((v,dx)=>{if(v)drawCell(COLORS[active.type],active.x+dx,active.y+dy)}))}
+    }
+    function drawNext(){nctx.clearRect(0,0,nextEl.width,nextEl.height);const m=SHAPES[nextType],size=23,w=m[0].length*size,h=m.length*size,ox=(nextEl.width-w)/2,oy=(nextEl.height-h)/2;m.forEach((r,y)=>r.forEach((v,x)=>{if(v){nctx.fillStyle=COLORS[nextType];nctx.fillRect(ox+x*size+1,oy+y*size+1,size-2,size-2);nctx.fillStyle='#ffffff25';nctx.fillRect(ox+x*size+3,oy+y*size+3,size-6,3)}}))}
+    function valid(p){for(let y=0;y<p.matrix.length;y++)for(let x=0;x<p.matrix[y].length;x++)if(p.matrix[y][x]){let bx=p.x+x,by=p.y+y;if(bx<0||bx>=COLS||by>=ROWS||(by>=0&&grid[by][bx]))return false}return true}
+    function move(dx,dy){if(state!=='playing')return false;const p={...active,x:active.x+dx,y:active.y+dy};if(valid(p)){active.x=p.x;active.y=p.y;if(dy>0)score++;updateStats();return true}if(dy>0)lock();return false}
+    function rotate(){if(state!=='playing')return;const m=active.matrix,rot=m[0].map((_,i)=>m.map(row=>row[i]).reverse());for(const kick of [0,-1,1,-2,2]){const p={...active,matrix:rot,x:active.x+kick};if(valid(p)){active.matrix=rot;active.x+=kick;playTone(440,.035);return}}}
+    function lock(){for(let y=0;y<active.matrix.length;y++)for(let x=0;x<active.matrix[y].length;x++)if(active.matrix[y][x]){const by=active.y+y,bx=active.x+x;if(by<0){finish();return}grid[by][bx]=active.type}clearRows();active=newPiece(nextType);nextType=newType();drawNext();if(!valid(active))finish()}
+    function clearRows(){let cleared=0;for(let y=ROWS-1;y>=0;y--)if(grid[y].every(Boolean)){grid.splice(y,1);grid.unshift(Array(COLS).fill(''));cleared++;y++}if(cleared){const points=[0,100,300,500,800];score+=points[cleared]*level;lines+=cleared;level=Math.floor(lines/10)+1;playTone(660,.12);updateStats()}}
+    function finish(){state='over';if(score>best){best=score;try{localStorage.setItem('tetris-best',String(best))}catch{}}updateStats();setOverlay('遊戲結束',`本次得分 ${score.toLocaleString()} 分，再來一局吧！`,'再玩一次')}
+    function togglePause(){if(state==='playing'){state='paused';setOverlay('先休息一下','按「繼續遊戲」回到方塊派對。','繼續遊戲')}else if(state==='paused'){state='playing';$('overlay').hidden=true;lastTime=performance.now()}}
+    function hardDrop(){if(state!=='playing')return;let d=0;while(valid({...active,y:active.y+1})){active.y++;d++}score+=d*2;lock();updateStats();playTone(300,.07)}
+    function tick(time=0){const dt=Math.min(time-lastTime,100);lastTime=time;if(state==='playing'){dropTimer+=dt;if(dropTimer>Math.max(85,720-(level-1)*55)){move(0,1);dropTimer=0}}draw();requestAnimationFrame(tick)}
+    function playTone(freq,duration){if(!sound)return;try{audio??=new(window.AudioContext||window.webkitAudioContext)();const o=audio.createOscillator(),g=audio.createGain();o.frequency.value=freq;g.gain.setValueAtTime(.04,audio.currentTime);g.gain.exponentialRampToValueAtTime(.001,audio.currentTime+duration);o.connect(g);g.connect(audio.destination);o.start();o.stop(audio.currentTime+duration)}catch{}}
+    $('startButton').addEventListener('click',()=>state==='paused'?togglePause():begin());$('restartButton').addEventListener('click',begin);$('pauseButton').addEventListener('click',togglePause);
+    $('soundButton').addEventListener('click',e=>{sound=!sound;e.currentTarget.textContent=`音效：${sound?'開':'關'}`;e.currentTarget.setAttribute('aria-pressed',String(sound));if(sound)playTone(520,.07)});
+    document.addEventListener('keydown',e=>{if(['ArrowLeft','ArrowRight','ArrowDown','ArrowUp',' '].includes(e.key))e.preventDefault();if(e.key==='Enter'&&(state==='ready'||state==='over'))begin();else if(e.key==='ArrowLeft')move(-1,0);else if(e.key==='ArrowRight')move(1,0);else if(e.key==='ArrowDown')move(0,1);else if(e.key==='ArrowUp'||e.key==='x'||e.key==='X')rotate();else if(e.key===' ')hardDrop();else if(e.key.toLowerCase()==='p'&&state!=='ready'&&state!=='over')togglePause()});
+    document.querySelectorAll('[data-action]').forEach(btn=>{let timer;const act=()=>{const a=btn.dataset.action;if(a==='left')move(-1,0);else if(a==='right')move(1,0);else if(a==='down')move(0,1);else if(a==='rotate')rotate();else hardDrop()};btn.addEventListener('pointerdown',e=>{e.preventDefault();act();if(['left','right','down'].includes(btn.dataset.action))timer=setInterval(act,115)});for(const ev of ['pointerup','pointerleave','pointercancel'])btn.addEventListener(ev,()=>clearInterval(timer))});
+    let touchX=0,touchY=0;boardEl.addEventListener('touchstart',e=>{const t=e.changedTouches[0];touchX=t.clientX;touchY=t.clientY},{passive:true});boardEl.addEventListener('touchend',e=>{const t=e.changedTouches[0],dx=t.clientX-touchX,dy=t.clientY-touchY;if(Math.max(Math.abs(dx),Math.abs(dy))<20)rotate();else if(Math.abs(dx)>Math.abs(dy))move(dx>0?1:-1,0);else if(dy>55)hardDrop();else move(0,1)},{passive:true});
+    updateStats();drawNext();requestAnimationFrame(tick);
+  })();
+  </script>
+</body>
+</html>
