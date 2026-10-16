@@ -2,14 +2,14 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
   <meta name="theme-color" content="#111522">
   <title>方塊派對｜俄羅斯方塊</title>
   <style>
     :root{color-scheme:dark;--bg:#111522;--panel:#1b2233;--line:#343e56;--text:#f7f8ff;--muted:#aab3c9;--cyan:#70e1e8;--pink:#fa75bf;--yellow:#ffd66e}
     *{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 50% 0,#28314d 0,var(--bg) 56%);color:var(--text);font-family:ui-rounded,"Segoe UI",system-ui,sans-serif;display:grid;place-items:center;padding:20px}
     .app{width:min(920px,100%)}header{text-align:center;margin:0 0 18px}h1{margin:0;font-size:clamp(26px,5vw,42px);letter-spacing:.06em}header p{margin:6px 0 0;color:var(--muted);font-size:14px}
-    .layout{display:grid;grid-template-columns:minmax(240px,320px) minmax(220px,280px);justify-content:center;align-items:start;gap:18px}.board-wrap{position:relative;padding:10px;border:1px solid #56627c;border-radius:18px;background:#0b0e17;box-shadow:0 18px 60px #0008}.board{display:block;width:100%;height:auto;border-radius:9px;background:#111726;touch-action:none}
+    .layout{display:grid;grid-template-columns:minmax(240px,320px) minmax(220px,280px);justify-content:center;align-items:start;gap:18px}.board-wrap{position:relative;padding:10px;border:1px solid #56627c;border-radius:18px;background:#0b0e17;box-shadow:0 18px 60px #0008;touch-action:none;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}.board{display:block;width:100%;height:auto;border-radius:9px;background:#111726;touch-action:none;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
     .board-wrap.clear-shake{animation:clear-shake .32s ease-out}.stat-burst{animation:stat-burst .45s cubic-bezier(.2,.8,.2,1)}
     @keyframes clear-shake{0%,100%{transform:translateX(0);box-shadow:0 18px 60px #0008}18%{transform:translateX(-5px);box-shadow:0 0 28px #70e1e899}38%{transform:translateX(4px)}58%{transform:translateX(-3px)}78%{transform:translateX(2px)}}
     @keyframes stat-burst{0%{transform:scale(1);color:var(--text)}45%{transform:scale(1.35);color:var(--yellow);text-shadow:0 0 16px #ffd66eaa}100%{transform:scale(1);color:var(--text)}}
@@ -27,14 +27,14 @@
     <header><h1>方塊派對</h1><p>排滿一整行，讓方塊消失！</p></header>
     <div class="layout">
       <section class="board-wrap" aria-label="俄羅斯方塊遊戲區">
-        <canvas id="board" class="board" width="300" height="600" aria-label="10 欄 20 列遊戲棋盤"></canvas>
+        <canvas id="board" class="board" width="300" height="600" aria-label="10 欄 20 列遊戲棋盤；輕點旋轉，左右滑動移動方塊"></canvas>
         <div id="overlay" class="overlay"><h2 id="overlayTitle">準備好了嗎？</h2><p id="overlayText">使用方向鍵移動，↑ 旋轉，空白鍵快速落下。</p><button id="startButton" class="primary" type="button">開始遊戲</button></div>
       </section>
       <aside class="side">
         <div class="card stats"><div class="stat"><span>分數</span><strong id="score">0</strong></div><div class="stat"><span>最高分</span><strong id="best">0</strong></div><div class="stat"><span>消除行數</span><strong id="lines">0</strong></div><div class="stat"><span>等級</span><strong id="level">1</strong></div></div>
         <div class="card"><p class="mini-title">下一個方塊</p><canvas id="next" class="next" width="140" height="100" aria-label="下一個方塊預覽"></canvas></div>
         <div class="card actions"><button id="pauseButton" type="button">暫停</button><button id="restartButton" type="button">重新開始</button><button id="soundButton" type="button" aria-pressed="false">音效：關</button></div>
-        <div class="card help"><b>鍵盤</b> ← → 移動、↑ 旋轉、↓ 加速、空白鍵直落、P 暫停。<br><b>手機</b> 使用下方按鈕操作。</div>
+        <div class="card help"><b>鍵盤</b> ← → 移動、↑ 旋轉、↓ 加速、空白鍵直落、P 暫停。<br><b>遊戲框</b> 輕點旋轉、左右滑動移動、向下滑快速落下。</div>
       </aside>
       <section class="touch" aria-label="觸控操作">
         <button data-action="down" aria-label="加速下落">↓</button><button data-action="left" aria-label="向左移動">←</button><button class="rotate" data-action="rotate" aria-label="旋轉">↻</button><button data-action="right" aria-label="向右移動">→</button><button class="drop" data-action="drop" aria-label="直接落下">⤓</button>
@@ -92,7 +92,13 @@
     $('soundButton').addEventListener('click',e=>{sound=!sound;e.currentTarget.textContent=`音效：${sound?'開':'關'}`;e.currentTarget.setAttribute('aria-pressed',String(sound));if(sound)playTone(520,.07)});
     document.addEventListener('keydown',e=>{if(['ArrowLeft','ArrowRight','ArrowDown','ArrowUp',' '].includes(e.key))e.preventDefault();if(e.key==='Enter'&&(state==='ready'||state==='over'))begin();else if(e.key==='ArrowLeft')move(-1,0);else if(e.key==='ArrowRight')move(1,0);else if(e.key==='ArrowDown')move(0,1);else if(e.key==='ArrowUp'||e.key==='x'||e.key==='X')rotate();else if(e.key===' ')hardDrop();else if(e.key.toLowerCase()==='p'&&state!=='ready'&&state!=='over')togglePause()});
     document.querySelectorAll('[data-action]').forEach(btn=>{let timer;const act=()=>{const a=btn.dataset.action;if(a==='left')move(-1,0);else if(a==='right')move(1,0);else if(a==='down')move(0,1);else if(a==='rotate')rotate();else hardDrop()};btn.addEventListener('pointerdown',e=>{e.preventDefault();act();if(['left','right','down'].includes(btn.dataset.action))timer=setInterval(act,115)});for(const ev of ['pointerup','pointerleave','pointercancel'])btn.addEventListener(ev,()=>clearInterval(timer))});
-    let touchX=0,touchY=0;boardEl.addEventListener('touchstart',e=>{const t=e.changedTouches[0];touchX=t.clientX;touchY=t.clientY},{passive:true});boardEl.addEventListener('touchend',e=>{const t=e.changedTouches[0],dx=t.clientX-touchX,dy=t.clientY-touchY;if(Math.max(Math.abs(dx),Math.abs(dy))<20)rotate();else if(Math.abs(dx)>Math.abs(dy))move(dx>0?1:-1,0);else if(dy>55)hardDrop();else move(0,1)},{passive:true});
+    let boardGesture=null;
+    boardEl.addEventListener('pointerdown',e=>{if(state!=='playing')return;e.preventDefault();boardEl.setPointerCapture(e.pointerId);boardGesture={pointerId:e.pointerId,startX:e.clientX,startY:e.clientY,movedSteps:0,horizontal:false}});
+    boardEl.addEventListener('pointermove',e=>{if(!boardGesture||e.pointerId!==boardGesture.pointerId)return;e.preventDefault();const dx=e.clientX-boardGesture.startX,dy=e.clientY-boardGesture.startY;if(!boardGesture.horizontal&&Math.abs(dx)>12&&Math.abs(dx)>Math.abs(dy))boardGesture.horizontal=true;if(!boardGesture.horizontal)return;const cellWidth=boardEl.getBoundingClientRect().width/COLS;const wanted=Math.trunc(dx/cellWidth);while(boardGesture.movedSteps!==wanted){const direction=wanted>boardGesture.movedSteps?1:-1;if(!move(direction,0))break;boardGesture.movedSteps+=direction}});
+    boardEl.addEventListener('pointerup',e=>{if(!boardGesture||e.pointerId!==boardGesture.pointerId)return;const gesture=boardGesture;boardGesture=null;const dx=e.clientX-gesture.startX,dy=e.clientY-gesture.startY;if(Math.max(Math.abs(dx),Math.abs(dy))<14)rotate();else if(!gesture.horizontal&&dy>55)hardDrop();else if(!gesture.horizontal&&dy>14)move(0,1)});
+    boardEl.addEventListener('pointercancel',()=>{boardGesture=null});
+    boardEl.addEventListener('dblclick',e=>e.preventDefault());
+    for(const eventName of ['gesturestart','gesturechange','gestureend'])boardEl.addEventListener(eventName,e=>e.preventDefault(),{passive:false});
     updateStats();drawNext();requestAnimationFrame(tick);
   })();
   </script>
