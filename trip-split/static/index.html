@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f8f7f3">
+  <meta name="description" content="一起出發，輕鬆分帳。記錄旅途花費、共同代墊和每個人的應付金額。">
+  <meta name="referrer" content="no-referrer">
+  <title>旅伴分帳 · 一起出發，帳目清楚</title>
+  <link rel="icon" href="./favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./style.css">
+  <script src="./config.js" defer></script>
+  <script src="./app.js" defer></script>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <a class="brand" href="./" aria-label="旅伴分帳首頁"><span class="brand-icon" aria-hidden="true">↗</span><span><strong>旅伴分帳</strong><small>TRAVEL TOGETHER</small></span></a>
+      <div id="accountBar" class="account-bar" hidden><span id="accountName"></span><button id="joinButton" class="text-button" type="button">加入旅程</button><button id="logoutButton" class="text-button" type="button">登出</button></div>
+      <button class="primary new-trip" type="button" data-action="create-trip">＋ 建立新旅程</button>
+      <p class="section-label">我的旅程</p>
+      <nav id="tripList" class="trip-list" aria-label="選擇旅程"><p class="muted">正在讀取…</p></nav>
+      <label class="mobile-picker">目前旅程<select id="tripPicker" aria-label="切換旅程"></select></label>
+      <div class="sidebar-bottom"><span class="storage-dot"></span><span id="connectionStatus">SQLite · 資料保存在電腦</span><p>好好旅行，帳交給我們。</p></div>
+    </aside>
+    <main class="main">
+      <section id="loginPanel" class="login-panel" hidden>
+        <p class="eyebrow">YOUR CREW, YOUR PRIVATE LEDGER</p><h1>旅伴集合，<br>一起把帳記好。</h1>
+        <p class="hint">每人使用自己的帳號，僅能存取自己建立或獲邀加入的旅程。資料保存在主辦人的電腦，不使用雲端資料庫。</p>
+        <form id="loginForm"><label>帳號<input id="loginUsername" required autocomplete="username" minlength="3" maxlength="40" pattern="[a-zA-Z0-9_.-]+" placeholder="英文、數字，至少 3 碼" autocapitalize="none" spellcheck="false"></label>
+          <label id="loginNameLabel" hidden>顯示名稱<input id="loginName" maxlength="30" autocomplete="nickname"></label>
+          <label>密碼<input id="loginPassword" type="password" required maxlength="128" autocomplete="current-password"></label>
+          <label id="loginInviteLabel" hidden>旅程邀請碼<input id="loginInvite" autocomplete="off" spellcheck="false" placeholder="貼上邀請碼或邀請網址"></label>
+          <p id="loginError" class="form-error" role="alert"></p><button id="loginSubmit" class="primary full" type="submit">登入帳本</button>
+        </form><button id="toggleRegister" class="text-button" type="button">收到邀請？建立帳號</button>
+        <p class="hint">第一次使用？請在主辦人的電腦執行 <code>python manage.py init-admin</code> 建立首個帳號。</p>
+      </section>
+      <div id="connectionBanner" class="connection-banner" role="status" hidden><span id="connectionText"></span><button id="retryButton" type="button">重新連線</button></div>
+      <section id="welcome" class="welcome" hidden>
+        <div class="welcome-art" aria-hidden="true"><span class="art-ticket">TRIP<br><strong>TOGETHER ↗</strong></span><span class="art-circle">✳</span><span class="art-label">YOU + ME + EVERYONE</span></div>
+        <p class="eyebrow">LESS COUNTING, MORE EXPLORING</p><h1>一起出發，<br>把帳分得剛剛好。</h1>
+        <p class="welcome-text">晚餐誰先付？住宿大家怎麼分？<br>記下每一筆，旅程結束就知道誰該付誰。</p>
+        <button class="primary large" type="button" data-action="create-trip">建立第一個旅程 ↗</button>
+        <div class="welcome-features"><span>✓ 平均／份數／指定金額</span><span>✓ 多人共同代墊</span><span>✓ 結算與還款紀錄</span></div>
+      </section>
+      <section id="tripPage" hidden>
+        <header class="trip-header"><div><p class="eyebrow">YOUR TRIP, ALL IN ONE PLACE</p><h1 id="tripTitle"></h1><p id="tripMeta" class="trip-meta"></p></div><div class="header-actions"><button id="shareButton" class="secondary" type="button">分享連線</button><button id="settingsButton" class="icon-button" type="button" aria-label="旅程設定">⋯</button></div></header>
+        <div class="summary-grid"><section class="summary main-summary"><span>旅程總花費</span><strong id="totalAmount">—</strong><small id="expenseCount"></small><span class="summary-decoration" aria-hidden="true">↗</span></section><section class="summary"><span>平均每人花費</span><strong id="averageAmount">—</strong><small>總花費 ÷ 旅程人數</small></section><section class="summary"><span>尚待轉帳</span><strong id="outstandingAmount">—</strong><small>已扣除記錄的還款</small></section></div>
+        <div class="content-toolbar"><div class="tabs" role="tablist" aria-label="帳本內容"><button id="tab-expenses" type="button" role="tab" aria-controls="panel-expenses" data-tab="expenses" aria-selected="true">帳目明細</button><button id="tab-balances" type="button" role="tab" aria-controls="panel-balances" data-tab="balances" aria-selected="false">成員結算</button><button id="tab-settlements" type="button" role="tab" aria-controls="panel-settlements" data-tab="settlements" aria-selected="false">還款紀錄</button></div><button id="addExpenseButton" class="primary" type="button">＋ 記一筆支出</button></div>
+        <section id="panel-expenses" role="tabpanel" aria-labelledby="tab-expenses"><div class="filter-bar"><label class="search-field"><span aria-hidden="true">⌕</span><input id="expenseSearch" type="search" placeholder="搜尋支出、成員或備註" aria-label="搜尋帳目"></label><select id="categoryFilter" aria-label="篩選分類"><option value="">所有分類</option></select><button id="exportButton" class="text-button" type="button">匯出 CSV ↓</button></div><div id="expenseList"></div></section>
+        <section id="panel-balances" role="tabpanel" aria-labelledby="tab-balances" hidden><div class="panel-heading"><div><h2>誰該付多少，一目了然。</h2><p>代墊與分攤相抵，再加上實際還款紀錄。</p></div><button id="membersButton" class="secondary" type="button">管理成員</button></div><div id="balanceCards" class="balance-cards"></div><section class="transfer-section"><div class="panel-heading"><div><h2>建議轉帳</h2><p>依淨額整理付款方向，照著轉就可以。</p></div><button id="manualSettlementButton" class="secondary" type="button">記錄還款</button></div><div id="transferList"></div></section></section>
+        <section id="panel-settlements" role="tabpanel" aria-labelledby="tab-settlements" hidden><div class="panel-heading"><div><h2>每一次還款，都有紀錄。</h2><p>這裡記錄已完成的轉帳，不會實際扣款。</p></div><button id="paymentRecordButton" class="secondary" type="button">＋ 記錄還款</button></div><div id="settlementList"></div></section>
+        <footer class="page-footer"><span>一起玩得盡興，也分得清楚。</span><span id="savedAt"></span><button id="refreshButton" class="text-button" type="button">重新整理 ↻</button></footer>
+      </section>
+      <section id="fileNotice" class="empty-state" hidden><h1>先啟動旅伴分帳</h1><p>請雙擊資料夾裡的 start.bat，再用瀏覽器開啟<br>http://127.0.0.1:8765</p></section>
+    </main>
+  </div>
+
+  <dialog id="tripDialog" class="dialog"><form id="tripForm"><header class="dialog-heading"><div><p class="eyebrow">LET'S GO SOMEWHERE</p><h2 id="tripDialogTitle">建立新旅程</h2></div><button type="button" class="close-button" data-close="tripDialog" aria-label="關閉">×</button></header><label>旅程名稱<input id="tripName" maxlength="80" required placeholder="例如：京都的慢慢走四日遊"></label><div class="form-grid"><label>目的地<input id="tripDestination" maxlength="80" placeholder="京都，日本"></label><label>出發日期<input id="tripDate" type="date"></label></div><label>記帳幣別<select id="tripCurrency"></select></label><p id="currencyHint" class="hint">同一旅程使用統一幣別，不自動換算匯率。</p><label id="initialMembersLabel">一起旅行的人<textarea id="initialMembers" rows="4" placeholder="一行一位，或用逗號分開&#10;小安&#10;小美&#10;阿哲"></textarea><small>至少 2 人；之後也能新增或修改姓名。</small></label><p id="tripFormError" class="form-error" role="alert"></p><div class="form-actions"><button id="deleteTripButton" class="danger-text" type="button" hidden>刪除整個旅程</button><button class="primary" type="submit">儲存旅程</button></div></form></dialog>
+
+  <dialog id="expenseDialog" class="dialog wide"><form id="expenseForm"><header class="dialog-heading"><div><p class="eyebrow">ONE LITTLE EXPENSE</p><h2 id="expenseDialogTitle">記一筆支出</h2></div><button type="button" class="close-button" data-close="expenseDialog" aria-label="關閉">×</button></header><label>這筆花費是？<input id="expenseTitle" required maxlength="80" placeholder="例如：大家一起吃的燒肉晚餐"></label><div class="form-grid"><label>總金額 <span id="expenseCurrencyLabel"></span><input id="expenseAmount" required inputmode="decimal" placeholder="0.00" autocomplete="off"></label><label>消費日期<input id="expenseDate" type="date" required></label></div><label>分類<select id="expenseCategory"></select></label><div class="field-heading"><strong>誰先付款？</strong><label class="inline-check"><input id="multiplePayers" type="checkbox">多人共同代墊</label></div><label id="singlePayerLabel"><span class="sr-only">付款人</span><select id="expensePayer"></select></label><div id="payerRows" class="allocation-rows" hidden></div><p id="payerTotal" class="allocation-total" hidden></p><div class="split-heading"><strong>哪些人一起分？</strong><select id="splitMode" aria-label="分攤方式"><option value="equal">平均分攤</option><option value="units">依份數分攤</option><option value="exact">指定金額</option></select></div><div class="share-actions"><button id="selectAllShares" type="button" class="text-button">全選</button><button id="clearShares" type="button" class="text-button">取消全選</button><span id="shareValueLabel"></span></div><div id="shareRows" class="allocation-rows"></div><p id="shareTotal" class="allocation-total"></p><p id="splitHint" class="hint">尾數以最小貨幣單位分配，合計會與總金額一致。</p><label>備註（選填）<textarea id="expenseNote" rows="2" maxlength="1000" placeholder="地點、訂單資訊，或想留下的小提醒"></textarea></label><p id="expenseEditHint" class="hint" hidden>此旅程已有還款紀錄；修改支出後會重新計算餘額，還款紀錄會保留。</p><p id="expenseFormError" class="form-error" role="alert"></p><div class="form-actions"><button id="deleteExpenseButton" class="danger-text" type="button" hidden>刪除這筆支出</button><button class="primary" type="submit">儲存支出</button></div></form></dialog>
+
+  <dialog id="membersDialog" class="dialog"><header class="dialog-heading"><div><p class="eyebrow">YOUR TRAVEL CREW</p><h2>一起旅行的人</h2></div><button type="button" class="close-button" data-close="membersDialog" aria-label="關閉">×</button></header><p class="hint">新增成員不會改動舊帳的分攤。已有帳目的人可修改姓名。</p><div id="memberList"></div><form id="memberForm" class="member-add"><label class="sr-only" for="newMemberName">新成員姓名</label><input id="newMemberName" maxlength="30" required placeholder="輸入新成員姓名"><button class="primary" type="submit">新增</button></form><p id="memberError" class="form-error" role="alert"></p></dialog>
+
+  <dialog id="settlementDialog" class="dialog"><form id="settlementForm"><header class="dialog-heading"><div><p class="eyebrow">SETTLE UP, FEEL GOOD</p><h2>記錄已完成的還款</h2></div><button type="button" class="close-button" data-close="settlementDialog" aria-label="關閉">×</button></header><p class="hint">請在實際轉帳或付現完成後記錄。</p><div class="form-grid"><label>誰付款<select id="settlementPayer"></select></label><label>付給誰<select id="settlementPayee"></select></label></div><label>本次還款金額<input id="settlementAmount" inputmode="decimal" required autocomplete="off"></label><p id="settlementLimit" class="hint"></p><label>付款日期<input id="settlementDate" type="date" required></label><label>備註（選填）<input id="settlementNote" maxlength="1000" placeholder="例如：已轉帳，或現金交付"></label><p id="settlementError" class="form-error" role="alert"></p><div class="form-actions"><button class="primary" type="submit">確認記錄還款</button></div></form></dialog>
+
+  <dialog id="shareDialog" class="dialog"><header class="dialog-heading"><div><p class="eyebrow">BRING YOUR FRIENDS</p><h2>用手機一起記帳</h2></div><button type="button" class="close-button" data-close="shareDialog" aria-label="關閉">×</button></header><p id="shareInstructions" class="hint"></p><label id="shareAddressLabel">連線位址<select id="shareAddress"></select></label><label id="shareLinkLabel">旅程分享網址<input id="shareLink" readonly></label><button id="copyShareButton" class="primary full" type="button">複製分享網址</button><p id="shareWarning" class="hint">需連上同一 Wi-Fi，且啟動程式的電腦需持續開著。持有連線金鑰的人可存取這個帳本的所有旅程，只分享給信任的夥伴。</p><div id="remoteShare" hidden><button id="newInviteButton" class="secondary" type="button">產生一人份邀請</button><button id="revokeInvitesButton" class="danger-text" type="button">撤銷所有未使用邀請</button><h3>已獲授權的帳號</h3><p class="hint">共同編輯者可新增、修改、刪除支出與還款；只有建立者可刪除旅程與管理邀請。這與分攤帳目中的成員名單不同。</p><div id="accessList"></div><p id="shareError" class="form-error" role="alert"></p></div></dialog>
+  <dialog id="joinDialog" class="dialog"><form id="joinForm"><header class="dialog-heading"><h2>加入旅伴的旅程</h2><button type="button" class="close-button" data-close="joinDialog" aria-label="關閉">×</button></header><label>邀請碼或邀請網址<input id="joinInvite" required autocomplete="off" spellcheck="false"></label><p id="joinError" class="form-error" role="alert"></p><button class="primary full" type="submit">加入旅程</button></form></dialog>
+
+  <dialog id="accessDialog" class="dialog"><form id="accessForm"><header class="dialog-heading"><div><p class="eyebrow">JOIN YOUR CREW</p><h2>輸入連線金鑰</h2></div></header><p class="hint">請向啟動程式的旅伴取得分享網址，或貼上啟動視窗內的金鑰。</p><label>分享網址或金鑰<input id="accessKey" type="password" required autocomplete="off"></label><p id="accessError" class="form-error" role="alert"></p><button class="primary full" type="submit">連線到帳本</button></form></dialog>
+
+  <dialog id="confirmDialog" class="dialog compact"><h2 id="confirmTitle"></h2><p id="confirmText" class="hint"></p><p id="confirmError" class="form-error" role="alert"></p><div class="form-actions"><button id="confirmCancel" class="secondary" type="button">取消</button><button id="confirmDelete" class="danger" type="button">確認刪除</button></div></dialog>
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+</body>
+</html>

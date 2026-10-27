@@ -1,0 +1,84 @@
+(async function () {
+  const checks = [], errors = [];
+  const pause = ms => new Promise(resolve => setTimeout(resolve, ms));
+  const check = (condition, name) => { if (!condition) throw new Error(name); checks.push(name); };
+  async function until(condition, name) { for (let i = 0; i < 160; i++) { if (condition()) return; await pause(50); } throw new Error('Timeout: ' + name); }
+  try {
+    const frame = document.getElementById('game');
+    await until(() => frame.contentDocument?.getElementById('welcome') && !frame.contentDocument.getElementById('welcome').hidden, 'welcome / backend connection');
+    let w = frame.contentWindow, d = frame.contentDocument;
+    const $ = id => d.getElementById(id);
+    w.addEventListener('error', event => errors.push(event.message));
+    const set = (id, value, change = false) => { $(id).value = value; $(id).dispatchEvent(new w.Event(change ? 'change' : 'input', { bubbles: true })); };
+    const amount = id => Number($(id).textContent.replace(/[^\d.-]/g, ''));
+    const submit = (formId, dialogId) => { $(formId).requestSubmit(); return until(() => !$(dialogId).open, formId + ' closes; error: ' + d.querySelector('#' + dialogId + ' .form-error')?.textContent); };
+    const detail = () => fetch('/api/trips/' + w.location.hash.slice(1)).then(response => response.json());
+    check($('welcome').textContent.includes('建立第一個旅程'), 'empty database has a working welcome screen');
+    d.querySelector('[data-action="create-trip"]').click();
+    set('tripName', '京都慢慢走'); set('tripDestination', '京都'); set('tripDate', '2026-10-27'); set('initialMembers', 'Alice\nBob\nCara');
+    await submit('tripForm', 'tripDialog');
+    await until(() => $('tripTitle').textContent === '京都慢慢走', 'created trip');
+    const tripId = w.location.hash.slice(1);
+    check((await detail()).members.length === 3, 'trip and three members saved through UI');
+    check(d.documentElement.scrollWidth <= w.innerWidth, 'phone layout fits viewport');
+    async function openExpense(title, value, category = 'food') {
+      $('addExpenseButton').click(); set('expenseTitle', title); set('expenseAmount', value); set('expenseDate', '2026-10-27'); set('expenseCategory', category, true);
+    }
+    await openExpense('晚餐 <img src=x>', '900');
+    await submit('expenseForm', 'expenseDialog');
+    check(amount('totalAmount') === 900 && amount('outstandingAmount') === 600, 'equal three-way expense updates totals');
+    check(d.querySelector('.expense-copy h3').textContent === '晚餐 <img src=x>' && !d.querySelector('.expense-copy img'), 'user text is escaped, not executed as markup');
+    await openExpense('共乘計程車', '300', 'transport');
+    $('expensePayer').selectedIndex = 1;
+    const cara = [...d.querySelectorAll('#shareRows [type=checkbox]')][2];cara.checked = false;cara.dispatchEvent(new w.Event('input', { bubbles:true }));
+    await submit('expenseForm', 'expenseDialog');
+    $('tab-balances').click();
+    check(amount('totalAmount') === 1200 && amount('outstandingAmount') === 450, 'selected participants and different payer balance correctly');
+    check(d.querySelectorAll('.balance-card').length === 3 && d.querySelectorAll('.transfer-row').length === 2, 'member balances and simplified payment directions appear');
+    d.querySelector('[data-settle="0"]').click();set('settlementAmount', '100');
+    await submit('settlementForm','settlementDialog');
+    check(amount('outstandingAmount') === 350, 'partial repayment reduces remaining balance');
+    $('tab-expenses').click();
+    await openExpense('一起住的旅館', '1000', 'stay');
+    $('multiplePayers').checked = true;$('multiplePayers').dispatchEvent(new w.Event('change'));
+    const payerInputs = [...d.querySelectorAll('#payerRows input')];payerInputs[0].value='600';payerInputs[1].value='400';
+    payerInputs[1].dispatchEvent(new w.Event('input',{bubbles:true}));
+    set('splitMode','units',true);
+    const weights=[...d.querySelectorAll('#shareRows [data-share-value]')];weights[0].value='2';weights[0].dispatchEvent(new w.Event('input',{bubbles:true}));
+    check($('payerTotal').textContent.includes('1,000') && !$('payerTotal').classList.contains('invalid'), 'multiple payer amount preview matches total');
+    await submit('expenseForm','expenseDialog');
+    check(amount('totalAmount') === 2200 && amount('outstandingAmount') === 450,'multiple payers and weighted shares are saved correctly');
+    const hotel = (await detail()).expenses.find(expense=>expense.title==='一起住的旅館');
+    d.querySelector('[data-edit-expense="'+hotel.id+'"]').click();set('splitMode','exact',true);
+    const exact=[...d.querySelectorAll('#shareRows [data-share-value]')];['400','300','300'].forEach((value,index)=>{exact[index].value=value;});exact[0].dispatchEvent(new w.Event('input',{bubbles:true}));
+    await submit('expenseForm','expenseDialog');
+    check(amount('totalAmount') === 2200 && amount('outstandingAmount') === 550,'editing to exact amounts recomputes balances while retaining repayment');
+    set('categoryFilter','stay',true);
+    check(d.querySelectorAll('.expense-row').length===1,'category filtering works');set('categoryFilter','',true);
+    set('expenseSearch','不存在的字');check(d.querySelectorAll('.expense-row').length===0,'search handles no matching expenses');set('expenseSearch','');
+    $('tab-balances').click();$('membersButton').click();set('newMemberName','Dan');$('memberForm').requestSubmit();
+    await until(()=>d.querySelectorAll('.member-row').length===4,'new member added');
+    check(amount('totalAmount')===2200 && amount('outstandingAmount')===550,'adding a member preserves historical splits');
+    const lastMember=[...d.querySelectorAll('.member-row')][3];lastMember.querySelector('input').value='Dora';lastMember.querySelector('[data-rename-member]').click();
+    await until(()=>[...d.querySelectorAll('.member-row input')].some(input=>input.value==='Dora'),'member renamed');
+    $('membersDialog').close();
+    for(let i=0;i<2;i++){d.querySelector('[data-settle="0"]').click();await submit('settlementForm','settlementDialog');}
+    check(amount('outstandingAmount')===0 && d.querySelectorAll('.transfer-row').length===0,'recording all suggested payments fully settles ledger');
+    $('tab-settlements').click();check(d.querySelectorAll('.settlement-row').length===3,'completed repayments remain visible');
+    const firstSettlement=(await detail()).settlements.find(s=>s.amount===10000);
+    d.querySelector('[data-delete-settlement="'+firstSettlement.id+'"]').click();$('confirmDelete').click();
+    await until(()=>!$('confirmDialog').open,'settlement delete');
+    check(amount('outstandingAmount')===100,'removing repayment restores the correct debt');
+    $('tab-balances').click();d.querySelector('[data-settle="0"]').click();await submit('settlementForm','settlementDialog');
+    check(amount('outstandingAmount')===0,'restored repayment settles again');
+    const exported=await fetch('/api/trips/'+tripId+'/export');check(exported.ok&&(await exported.text()).includes('一起住的旅館'),'CSV export includes saved expenses');
+    frame.width='1280';frame.height='950';await pause(100);
+    check(d.documentElement.scrollWidth<=w.innerWidth,'desktop layout has no horizontal overflow');
+    w.location.reload();
+    await until(()=>frame.contentDocument!==d&&frame.contentDocument?.getElementById('tripTitle')?.textContent==='京都慢慢走','reload from SQLite');
+    w=frame.contentWindow;d=frame.contentDocument;
+    check(amount('totalAmount')===2200&&amount('outstandingAmount')===0&&d.querySelectorAll('.expense-row').length===3,'reloading restores SQLite data and settlement state');
+    check(errors.length===0,'no browser runtime errors');
+    document.getElementById('result').textContent=JSON.stringify({ok:true,count:checks.length,checks});
+  } catch(error){document.getElementById('result').textContent=JSON.stringify({ok:false,error:error.message,checks,errors});}
+})();
