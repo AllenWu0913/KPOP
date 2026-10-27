@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#111b29">
+  <meta name="description" content="不用趕時間的拖曳方塊遊戲。拼滿橫行、挑戰全盤清空，收集高分！">
+  <title>方塊小宇宙 · 拖曳消行</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="rules.js" defer></script>
+  <script src="game.js" defer></script>
+</head>
+<body>
+  <main class="app">
+    <header class="header">
+      <div><p class="eyebrow">TAKE YOUR TIME · MAKE SOME SPACE</p><h1>方塊小宇宙<span>✦</span></h1><p class="tagline">慢慢拼，把空間變成你的高分。</p></div>
+      <button id="helpButton" class="icon-button" type="button" aria-label="遊戲說明">？</button>
+    </header>
+    <section class="stats" aria-label="遊戲紀錄">
+      <div class="stat"><span>目前分數</span><strong id="score">0</strong></div>
+      <div class="stat"><span>最高紀錄</span><strong id="best">0</strong></div>
+      <div class="stat"><span>消除橫行</span><strong id="lines">0</strong></div>
+    </section>
+    <section class="play-layout">
+      <div class="play-column">
+        <div class="level-heading"><span id="level">第 1 關</span><span id="levelGoal">再消除 5 行升關</span></div>
+        <div class="progress-track" role="progressbar" aria-label="升關進度" aria-valuemin="0" aria-valuemax="5" aria-valuenow="0" id="progress"><span id="progressFill"></span></div>
+        <div class="board-frame" id="boardFrame"><div id="board" class="board" role="grid" aria-label="8 乘 8 棋盤；放滿橫行即可消除" aria-rowcount="8" aria-colcount="8"></div></div>
+        <p id="message" class="message" role="status" aria-live="polite">拖一個圖形上來，從任何位置開始。</p>
+        <section class="tray-section" aria-label="可使用的圖形">
+          <div class="tray-heading"><h2>這一回合</h2><span>三個用完，再補新圖形</span></div>
+          <div id="tray" class="tray"></div>
+        </section>
+      </div>
+      <aside class="side">
+        <section class="info-card how-to"><p class="eyebrow">HOW TO PLAY</p><h2>拼出一點小驚喜</h2><ol><li>拖曳圖形到空格，放開即可拼上。</li><li>圖形方向固定，不能旋轉。</li><li>整條橫行排滿就消除，上方方塊不下落。</li></ol><p class="tap-hint">也可以先點圖形，再點棋盤空格放置。點到的格子就是圖形左上角。</p></section>
+        <section class="info-card bonus-card"><span class="bonus-star" aria-hidden="true">✧</span><h2>全盤清空獎勵</h2><p>讓棋盤上一個方塊都不剩！</p><strong id="bonusValue">+1,200 分</strong><small>關卡越高，獎勵越多。</small></section>
+        <div class="actions"><button id="soundButton" type="button" aria-pressed="false">♪ 音效：關</button><button id="newGameButton" type="button">重新開始</button></div>
+        <p class="local-note">最高分保存在這台裝置的瀏覽器。</p>
+      </aside>
+    </section>
+    <footer>沒有倒數，也沒有下落。下一格，由你決定。</footer>
+  </main>
+  <div id="dragGhost" class="drag-ghost" aria-hidden="true" hidden></div>
+  <div id="celebration" class="celebration" aria-live="polite" hidden><div class="celebration-ring" aria-hidden="true"></div><div class="celebration-copy"><span class="celebration-icon" aria-hidden="true">✦</span><h2>全盤清空！</h2><p id="celebrationPoints"></p><span>太棒了，讓我們再拼一回合！</span></div></div>
+  <canvas id="effects" class="effects" aria-hidden="true"></canvas>
+  <dialog id="gameDialog"><div class="dialog-body"><span class="dialog-icon" aria-hidden="true">✦</span><h2 id="dialogTitle"></h2><p id="dialogText"></p><div class="dialog-actions"><button id="dialogCancel" type="button">繼續拼</button><button id="dialogConfirm" class="primary" type="button">再玩一次</button></div></div></dialog>
+</body>
+</html>
