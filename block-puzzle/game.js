@@ -144,6 +144,12 @@
     renderTray();
     message(text);
   }
+  function vibratePlacement() {
+    // Optional hardware feedback: unsupported or blocked APIs must not interrupt a turn.
+    try {
+      if (typeof navigator.vibrate === 'function') navigator.vibrate(20);
+    } catch {}
+  }
   function placePiece(index, x, y) {
     if (busy || state !== 'playing' || !tray[index]) return false;
     const shape = tray[index], next = R.place(board, shape, x, y);
@@ -153,6 +159,7 @@
       return false;
     }
     board = next; tray[index] = null; selected = null; preview = null; busy = true;
+    vibratePlacement();
     const clearedRows = R.fullRows(board), oldLevel = level();
     const afterClear = R.clearRows(board, clearedRows);
     const allClear = clearedRows.length > 0 && afterClear.every(row => row.every(cell => !cell));
